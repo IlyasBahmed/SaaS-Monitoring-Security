@@ -49,6 +49,7 @@ $items = [
                 [&::-webkit-scrollbar-thumb]:rounded-full
                 [&::-webkit-scrollbar-thumb]:bg-cyan-400/30
                 hover:[&::-webkit-scrollbar-thumb]:bg-cyan-400/50">
+
         @foreach ($items as $item)
             @if (isset($item['section']))
                 <p class="px-3 pt-6 pb-2 text-[10px] font-bold tracking-[0.22em] text-slate-400 uppercase dark:text-slate-600">
@@ -56,8 +57,9 @@ $items = [
                 </p>
             @else
                 @php
-                    $isActive = request()->routeIs($item['route']);
-                    $href = route($item['route']);
+                    $routePattern = $item['route'] . '*';
+                    $isActive = request()->routeIs($routePattern);
+                    $href = Route::has($item['route']) ? route($item['route']) : '#';
                 @endphp
 
                 <a href="{{ $href }}"
@@ -178,11 +180,15 @@ $items = [
     <div class="m-4 shrink-0 rounded-xl bg-slate-50 border border-cyan-100 p-4 dark:bg-slate-900/50 dark:border-cyan-400/10">
         <div class="flex items-center gap-3">
             <div class="h-8 w-8 rounded-full bg-cyan-50 border border-cyan-200 flex items-center justify-center text-[10px] font-bold text-cyan-700 dark:bg-cyan-500/20 dark:border-cyan-500/40 dark:text-cyan-300">
-                AD
+                {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
             </div>
             <div>
-                <p class="text-xs font-bold text-slate-900 dark:text-white">Admin</p>
-                <p class="text-[10px] text-slate-500 dark:text-slate-500">Super Admin</p>
+                <p class="text-xs font-bold text-slate-900 dark:text-white">
+                    {{ Auth::user()->name ?? 'Admin' }}
+                </p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-500">
+                    {{ Auth::user()->role ?? 'User' }}
+                </p>
             </div>
         </div>
     </div>

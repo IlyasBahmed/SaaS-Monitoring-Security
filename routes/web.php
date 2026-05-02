@@ -1,15 +1,30 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserInviteController;
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 
+Route::get('/test-email', function () {
+    Mail::raw('Test email from Laravel 🚀', function ($message) {
+        $message->to('your@gmail.com') // بدل بالإيميل ديالك
+                ->subject('Test Email');
+    });
+
+    return 'Email sent!';
+});
+Route::post('/users-roles/invite', [UserInviteController::class, 'store'])
+    ->middleware(['auth'])
+    ->name('users.invite');
 Route::get('/', function () {
     return view('welcome');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return view('pages.dashboard');
     })->name('dashboard');
 
     $sidebarPages = [
@@ -67,12 +82,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'title' => 'Audit Logs',
             'description' => 'Review platform activity, changes, and administrative actions.',
         ],
-        [
-            'uri' => '/users-roles',
-            'name' => 'users.roles',
-            'title' => 'Users & Roles',
-            'description' => 'Manage access, permissions, and role assignments.',
-        ],
     ];
 
     foreach ($sidebarPages as $page) {
@@ -81,6 +90,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'description' => $page['description'],
         ])->name($page['name']);
     }
+
+    Route::get('/users-roles', function () {
+        $usersPayload = User::query()
+            ->whereIn('role', ['Super Admin', 'SOC Analyst'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'access' => $user->role === 'Super Admin'
+                    ? 'Full platform access'
+                    : 'SOC operations',
+                'status' => ucfirst(strtolower($user->status ?? 'inactive')),
+                'last_login_at' => $user->last_login_at
+                    ? Carbon::parse($user->last_login_at)->diffForHumans()
+                    : 'Never',
+            ])
+            ->values()
+            ->all();
+
+        return view('pages.users-roles', compact('usersPayload'));
+    })->name('users.roles');
+
+    Route::post('/users-roles/invite', [UserInviteController::class, 'store'])
+        ->name('users.invite');
+
+    Route::put('/users-roles/{user}', [UserInviteController::class, 'update'])
+        ->name('users.update');
+
+    Route::delete('/users-roles/{user}', [UserInviteController::class, 'destroy'])
+        ->name('users.destroy');
 });
 
 Route::middleware('auth')->group(function () {
