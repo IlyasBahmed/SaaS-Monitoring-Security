@@ -24,11 +24,11 @@ class InviteUserNotification extends Notification
         $url = url('/reset-password/'.$this->token.'?email='.$notifiable->email);
 
         return (new MailMessage)
-            ->subject('You are invited to CyberShield')
+            ->subject('CyberShield access invitation')
             ->greeting('Welcome to CyberShield')
-            ->line('You have been invited to join the platform.')
-            ->line('Click below to set your password and activate your account.')
+            ->line('An administrator has invited you to join the CyberShield SOC workspace.')
+            ->line('Use the secure link below to set your password and activate your account.')
             ->action('Set your password', $url)
-            ->line('If you did not expect this invitation, ignore this email.');
+            ->line('If you were not expecting this invitation, you can safely ignore this message.');
     }
 }

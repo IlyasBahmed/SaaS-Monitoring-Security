@@ -4,17 +4,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserInviteController;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
+use App\Models\Projects;
+use App\Models\clients;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 
-Route::get('/test-email', function () {
-    Mail::raw('Test email from Laravel 🚀', function ($message) {
-        $message->to('your@gmail.com') // بدل بالإيميل ديالك
-                ->subject('Test Email');
-    });
-
-    return 'Email sent!';
-});
 Route::post('/users-roles/invite', [UserInviteController::class, 'store'])
     ->middleware(['auth'])
     ->name('users.invite');
@@ -27,19 +21,73 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('pages.dashboard');
     })->name('dashboard');
 
+    Route::get('/projects', function () {
+        $projects = Projects::query()
+            ->with('client')
+            ->latest()
+            ->get();
+
+        return view('pages.projects', compact('projects'));
+    })->name('projects.index');
+
+    Route::get('/projects/create', function () {
+        $clients = clients::query()
+            ->orderBy('company_name')
+            ->get();
+
+        return view('pages.projects-create', compact('clients'));
+    })->name('projects.create');
+
+    Route::post('/projects', function () {
+        $validated = request()->validate([
+            'client_id' => ['required', 'exists:clients,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'domain' => ['nullable', 'string', 'max:255'],
+            'ip_address' => ['nullable', 'string', 'max:255'],
+            'stack' => ['nullable', 'string', 'max:255'],
+            'status' => ['required', 'in:Active,Inactive'],
+        ]);
+
+        Projects::create($validated);
+
+        return redirect()
+            ->route('projects.index')
+            ->with('success', 'Project added successfully.');
+    })->name('projects.store');
+
+    Route::get('/clients', function () {
+        $clients = clients::query()
+            ->with('user')
+            ->withCount('projects')
+            ->latest()
+            ->get();
+
+        return view('pages.clients', compact('clients'));
+    })->name('clients.index');
+
+    Route::get('/clients/create', function () {
+        return view('pages.clients-create');
+    })->name('clients.create');
+
+    Route::post('/clients', function () {
+        $validated = request()->validate([
+            'company_name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:1000'],
+            'status' => ['required', 'in:active,warning,critical'],
+        ]);
+
+        clients::create([
+            ...$validated,
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()
+            ->route('clients.index')
+            ->with('success', 'Client added successfully.');
+    })->name('clients.store');
+
     $sidebarPages = [
-        [
-            'uri' => '/clients',
-            'name' => 'clients.index',
-            'title' => 'Clients',
-            'description' => 'Manage customer accounts, contacts, and security ownership.',
-        ],
-        [
-            'uri' => '/projects',
-            'name' => 'projects.index',
-            'title' => 'Projects',
-            'description' => 'Track active security projects, scopes, and assigned teams.',
-        ],
         [
             'uri' => '/agents',
             'name' => 'agents.index',
