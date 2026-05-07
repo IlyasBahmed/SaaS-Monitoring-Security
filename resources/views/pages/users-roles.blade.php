@@ -60,7 +60,7 @@
                         </svg>
                     </span>
                 </div>
-                <p class="mt-4 text-3xl font-black text-slate-950 dark:text-white" x-text="users.length"></p>
+                <p class="mt-4 text-3xl font-black text-slate-950 dark:text-white" x-text="stats.total || users.length"></p>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Total platform accounts</p>
             </div>
 
@@ -252,6 +252,9 @@
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Try another search term or reset the filters.</p>
             </div>
         </div>
+
+        {{-- PAGINATION --}}
+        <x-pagination :paginator="$users" />
 
         {{-- Role Profiles --}}
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -602,6 +605,7 @@
         document.addEventListener('alpine:init', () => {
             const initialUsers = @js($usersPayload);
             const usersBaseUrl = @js(url('/users-roles'));
+            const stats = @js($stats ?? []);
 
             Alpine.data('usersRolesPage', () => ({
                 search: '',
@@ -657,9 +661,15 @@
                     });
                 },
                 get activeUsers() {
-                    return this.users.filter((user) => this.statusLabel(user.status) === 'Active').length;
+                    return stats.active || this.users.filter((user) => this.statusLabel(user.status) === 'Active').length;
                 },
                 countByRole(role) {
+                    if (role === 'Super Admin') {
+                        return stats.admins || this.users.filter((user) => user.role === role).length;
+                    }
+                    if (role === 'SOC Analyst') {
+                        return stats.analysts || this.users.filter((user) => user.role === role).length;
+                    }
                     return this.users.filter((user) => user.role === role).length;
                 },
                 initials(name) {

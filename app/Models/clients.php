@@ -3,15 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class clients extends Model
 {
+    use Notifiable;
+
     protected $fillable = [
         'user_id',
         'company_name',
+        'email',
         'phone',
         'address',
-        'status', 
+        'status',
     ];
 
     public function user()

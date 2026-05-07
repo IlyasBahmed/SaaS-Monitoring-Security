@@ -16,10 +16,10 @@
                 Export
             </button>
 
-            <button type="button"
-                class="h-9 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20 transition">
+            <a href="{{ route('clients.create') }}"
+                class="inline-flex h-9 items-center rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20 transition">
                 + Add Client
-            </button>
+            </a>
         </div>
     </div>
 
@@ -74,9 +74,9 @@
                         $clientStatus = strtolower($client->status ?? 'active');
                         $score = $clientStatus === 'active' ? 94 : ($clientStatus === 'warning' ? 71 : 58);
 
-                        $scoreColor = $score >= 90
-                            ? 'border-emerald-400 text-emerald-300'
-                            : ($score >= 70 ? 'border-amber-400 text-amber-300' : 'border-red-400 text-red-300');
+                        $scoreLabel = $score >= 90 ? 'Healthy' : ($score >= 70 ? 'Review' : 'Risk');
+                        $scoreText = $score >= 90 ? 'text-emerald-300' : ($score >= 70 ? 'text-amber-300' : 'text-red-300');
+                        $scoreRing = $score >= 90 ? 'ring-emerald-400/20' : ($score >= 70 ? 'ring-amber-400/20' : 'ring-red-400/20');
 
                         $initials = collect(explode(' ', $client->company_name ?? 'Client'))
                             ->map(fn($p) => substr($p,0,1))
@@ -86,7 +86,7 @@
                     <tr
                         x-show="
                             (status === 'all' || status === '{{ $clientStatus }}') &&
-                            ('{{ strtolower($client->company_name ?? '') }}'.includes(search.toLowerCase()))
+                            ('{{ strtolower(($client->company_name ?? '').' '.($client->email ?? '')) }}'.includes(search.toLowerCase()))
                         "
                         class="hover:bg-white/[0.025] transition">
 
@@ -99,7 +99,7 @@
 
                                 <div>
                                     <p class="font-bold text-white">{{ $client->company_name }}</p>
-                                    <p class="text-xs text-slate-600">{{ $client->industry ?? 'Business' }}</p>
+                                    <p class="text-xs text-slate-600">{{ $client->email ?? 'No email' }}</p>
                                 </div>
                             </div>
                         </td>
@@ -111,8 +111,40 @@
 
                         {{-- SCORE --}}
                         <td class="px-5 py-4">
-                            <div class="flex h-11 w-11 items-center justify-center rounded-full border-[3px] bg-[#020617] text-sm font-black {{ $scoreColor }}">
-                                {{ $score }}
+                            <div class="flex items-center gap-3">
+                                <div class="relative h-14 w-14 shrink-0 rounded-full bg-[#020617] p-1 ring-1 {{ $scoreRing }}" title="{{ $scoreLabel }}">
+                                    <svg class="h-full w-full -rotate-90" viewBox="0 0 40 40" aria-hidden="true">
+                                        <circle
+                                            class="stroke-slate-800"
+                                            cx="20"
+                                            cy="20"
+                                            r="16"
+                                            fill="none"
+                                            stroke-width="4"
+                                        />
+                                        <circle
+                                            class="stroke-current {{ $scoreText }}"
+                                            cx="20"
+                                            cy="20"
+                                            r="16"
+                                            fill="none"
+                                            stroke-width="4"
+                                            stroke-linecap="round"
+                                            pathLength="100"
+                                            stroke-dasharray="100"
+                                            stroke-dashoffset="{{ 100 - $score }}"
+                                        />
+                                    </svg>
+
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="text-sm font-black {{ $scoreText }}">{{ $score }}</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p class="text-xs font-black {{ $scoreText }}">{{ $scoreLabel }}</p>
+                                    <p class="mt-0.5 text-[10px] font-medium text-slate-600">Score</p>
+                                </div>
                             </div>
                         </td>
 
@@ -129,9 +161,9 @@
                         {{-- ACTIONS --}}
                         <td class="px-5 py-4">
                             <div class="flex justify-end gap-2">
-                                <button class="rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">
+                                <a href="{{ route('clients.show', $client) }}" class="rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">
                                     View
-                                </button>
+                                </a>
 
                                 <button class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-slate-500 hover:border-cyan-400/30 hover:text-cyan-300">
                                     ⧉
@@ -151,6 +183,9 @@
             </tbody>
         </table>
     </div>
+
+    {{-- PAGINATION --}}
+    <x-pagination :paginator="$clients" />
 
 </div>
 </x-dashboard-layout>
