@@ -9,7 +9,6 @@ $items = [
     ['label' => 'Agents', 'route' => 'agents.index', 'icon' => 'cpu', 'badge' => null],
 
     ['section' => 'SECURITY'],
-    ['label' => 'Security Center', 'route' => 'security.index', 'icon' => 'shield', 'badge' => null],
     ['label' => 'Incidents', 'route' => 'incidents.index', 'icon' => 'alert', 'badge' => 3, 'badgeColor' => 'red'],
     ['label' => 'Alerts', 'route' => 'alerts.index', 'icon' => 'bell', 'badge' => 5, 'badgeColor' => 'yellow'],
     ['label' => 'Cloudflare', 'route' => 'cloudflare.index', 'icon' => 'cloud', 'badge' => null],

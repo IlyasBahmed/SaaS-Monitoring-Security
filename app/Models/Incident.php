@@ -4,34 +4,35 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
-class AuditLog extends Model
+class Incident extends Model
 {
     protected $connection = 'mongodb';
 
-    protected $collection = 'audit_logs';
+    protected $collection = 'incidents';
 
     protected $fillable = [
         'project_id',
+        'incident_key',
         'category',
         'event',
         'severity',
         'site_url',
         'ip',
         'user_agent',
-        'actor',
         'target',
-        'before',
-        'after',
         'metadata',
+        'status',
+        'assigned_user_id',
+        'assigned_user_name',
+        'assigned_user_email',
+        'assigned_at',
         'event_created_at',
     ];
 
     protected $casts = [
-    'actor' => 'array',
-    'target' => 'array',
-    'before' => 'array',
-    'after' => 'array',
-    'metadata' => 'array',
-    'event_created_at' => 'datetime',
-];
+        'target' => 'array',
+        'metadata' => 'array',
+        'assigned_at' => 'datetime',
+        'event_created_at' => 'datetime',
+    ];
 }

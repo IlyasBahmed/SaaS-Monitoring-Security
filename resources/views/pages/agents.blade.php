@@ -1,226 +1,472 @@
-<x-dashboard-layout>
-    @php
-        $total = $installations->count();
-        $online = $installations->where('status', 'online')->count();
-        $offline = $installations->where('status', 'offline')->count();
-        $pending = $installations->where('status', 'pending')->count();
+<?php
 
-        $rows = $installations->map(function ($installation) {
-            $lastSeen = $installation->last_seen_at
-                ? \Illuminate\Support\Carbon::parse($installation->last_seen_at)
-                : null;
+namespace App\Http\Controllers;
 
-            return [
-                'id' => $installation->id,
-                'agent_name' => $installation->agent->name ?? 'Unknown Agent',
-                'agent_slug' => $installation->agent->slug ?? 'unknown',
-                'category' => $installation->agent->category ?? 'General',
-                'project' => $installation->project->domain ?? $installation->project->name ?? '-',
-                'client' => $installation->project->client->company_name ?? '-',
-                'version' => $installation->version ?? '-',
-                'status' => strtolower($installation->status ?? 'offline'),
-                'last_seen' => $lastSeen ? $lastSeen->diffForHumans() : 'No heartbeat',
-                'search' => strtolower(trim(implode(' ', [
-                    $installation->agent->name ?? '',
-                    $installation->agent->slug ?? '',
-                    $installation->agent->category ?? '',
-                    $installation->project->domain ?? '',
-                    $installation->project->name ?? '',
-                    $installation->project->client->company_name ?? '',
-                    $installation->version ?? '',
-                    $installation->status ?? '',
-                ]))),
-            ];
-        })->values();
-    @endphp
+use App\Models\agents;
+use App\Models\Projects;
+use App\Models\ProjectAgent;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use App\Models\SiteInventory;
+use App\Models\AgentLog;
+use App\Models\AuditLog;
+use App\Models\Incident;
+use App\Models\HealthReport;
+use App\Models\FileScanReport;
 
-    <div
-        x-data="{
-            search: '',
-            status: 'all',
-            rows: @js($rows),
-            matches(row) {
-                const q = this.search.toLowerCase().trim();
-                const okSearch = !q || row.search.includes(q);
-                const okStatus = this.status === 'all' || row.status === this.status;
-                return okSearch && okStatus;
-            },
-            get visibleRows() {
-                return this.rows.filter((row) => this.matches(row)).length;
-            }
-        }"
-        class="space-y-6"
-    >
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">Management</p>
-                <h1 class="mt-2 text-3xl font-black text-white">Agents</h1>
-                <p class="mt-1 text-sm text-slate-500">
-                    {{ $total }} installed agents
-                </p>
-            </div>
+class AgentController extends Controller
+{
+    /**
+     * Verify plugin installation
+     */
+    public function verify(Request $request)
+    {
+        $request->validate([
+            'site_url'       => ['required', 'url'],
+            'agent_slug'     => ['required', 'string'],
+            'wp_version'     => ['nullable', 'string'],
+            'php_version'    => ['nullable', 'string'],
+            'plugin_version' => ['nullable', 'string'],
+        ]);
 
-            <button type="button"
-                class="h-9 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20 transition">
-                Register Agent
-            </button>
-        </div>
+        $header = $request->header('Authorization');
 
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-xl border border-slate-800 bg-[#07111f] p-5">
-                <p class="text-xs font-bold text-slate-500">Total Installations</p>
-                <p class="mt-3 text-2xl font-black text-white">{{ $total }}</p>
-            </div>
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing API key',
+            ], 401);
+        }
 
-            <div class="rounded-xl border border-slate-800 bg-[#07111f] p-5">
-                <p class="text-xs font-bold text-slate-500">Online</p>
-                <p class="mt-3 text-2xl font-black text-emerald-300">{{ $online }}</p>
-            </div>
+        $apiKey = trim(substr($header, 7));
 
-            <div class="rounded-xl border border-slate-800 bg-[#07111f] p-5">
-                <p class="text-xs font-bold text-slate-500">Pending</p>
-                <p class="mt-3 text-2xl font-black text-amber-300">{{ $pending }}</p>
-            </div>
+        $project = Projects::where('api_key', $apiKey)->first();
 
-            <div class="rounded-xl border border-slate-800 bg-[#07111f] p-5">
-                <p class="text-xs font-bold text-slate-500">Offline</p>
-                <p class="mt-3 text-2xl font-black text-red-300">{{ $offline }}</p>
-            </div>
-        </div>
+        if (!$project) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid API key',
+            ], 401);
+        }
 
-        <div class="flex items-center justify-between gap-3">
-            <div class="relative w-80">
-                <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600"
-                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <circle cx="10.5" cy="10.5" r="7.5"/>
-                    <path d="m21 21-4.35-4.35"/>
-                </svg>
+        $agent = agents::where('slug', $request->agent_slug)->first();
 
-                <input
-                    x-model.debounce.200ms="search"
-                    type="text"
-                    placeholder="Search installations..."
-                    class="h-10 w-full rounded-xl border border-slate-800 bg-[#07111f] pl-9 pr-3 text-sm text-slate-300 placeholder-slate-600 outline-none focus:border-cyan-400/40"
-                >
-            </div>
+        if (!$agent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Agent not found',
+            ], 404);
+        }
 
-            <div class="flex rounded-xl border border-slate-800 bg-[#07111f] p-1">
-                @foreach(['all' => 'All', 'online' => 'Online', 'pending' => 'Pending', 'offline' => 'Offline'] as $key => $label)
-                    <button
-                        type="button"
-                        @click="status='{{ $key }}'"
-                        class="rounded-lg px-4 py-2 text-xs font-bold transition"
-                        :class="status === '{{ $key }}'
-                            ? 'bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/30'
-                            : 'text-slate-500 hover:bg-white/5 hover:text-cyan-300'">
-                        {{ $label }}
-                    </button>
-                @endforeach
-            </div>
-        </div>
+        $agentKey = 'agent_' . Str::random(40);
 
-        <div class="overflow-hidden rounded-2xl border border-cyan-400/10 bg-[#07111f] shadow-2xl shadow-black/20">
-            <table class="w-full">
-                <thead class="border-b border-white/5 bg-white/[0.02]">
-                    <tr class="text-left text-[10px] uppercase tracking-[0.2em] text-cyan-500/50">
-                        <th class="px-5 py-4">Agent</th>
-                        <th class="px-5 py-4">Project</th>
-                        <th class="px-5 py-4">Client</th>
-                        <th class="px-5 py-4">Version</th>
-                        <th class="px-5 py-4">Last Seen</th>
-                        <th class="px-5 py-4">Status</th>
-                    </tr>
-                </thead>
+        $installation = ProjectAgent::updateOrCreate(
+            [
+                'project_id' => $project->id,
+                'agent_id'   => $agent->id,
+            ],
+            [
+                'site_url'     => $request->site_url,
+                'wp_version'   => $request->wp_version,
+                'php_version'  => $request->php_version,
+                'version'      => $request->plugin_version ?? '1.0.0',
+                'status'       => 'online',
+                'api_key'      => $agentKey,
+                'connected_at' => now(),
+                'last_seen_at' => now(),
+            ]
+        );
 
-                <tbody class="divide-y divide-white/5">
-                    @forelse($installations as $installation)
-                        @php
-                            $status = strtolower($installation->status ?? 'offline');
+        $project->update([
+            'is_connected' => true,
+            'connected_at' => $project->connected_at ?? now(),
+            'last_seen_at' => now(),
+            'status'       => 'active',
+            'domain'       => $project->domain ?: $request->site_url,
+            'stack'        => 'wordpress',
+        ]);
 
-                            $statusClass = $status === 'online'
-                                ? 'text-emerald-300'
-                                : ($status === 'pending' ? 'text-amber-300' : 'text-red-300');
+        return response()->json([
+            'success'       => true,
+            'project_id'    => $project->id,
+            'agent_api_key' => $installation->api_key,
+            'message'       => 'Connected successfully',
+        ]);
+    }
 
-                            $dotClass = $status === 'online'
-                                ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]'
-                                : ($status === 'pending' ? 'bg-amber-400' : 'bg-red-400');
+    /**
+     * Heartbeat
+     */
+    public function heartbeat(Request $request)
+    {
+        $request->validate([
+            'site_url'       => ['required', 'url'],
+            'wp_version'     => ['nullable', 'string'],
+            'php_version'    => ['nullable', 'string'],
+            'plugin_version' => ['nullable', 'string'],
+        ]);
 
-                            $lastSeen = $installation->last_seen_at
-                                ? \Illuminate\Support\Carbon::parse($installation->last_seen_at)->diffForHumans()
-                                : 'No heartbeat';
-                        @endphp
+        $header = $request->header('Authorization');
 
-                        <tr
-                            x-show="matches(rows.find((row) => row.id === {{ $installation->id }}))"
-                            class="hover:bg-white/[0.025] transition"
-                        >
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-300">
-                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                            <rect x="5" y="5" width="14" height="14" rx="2"/>
-                                            <rect x="9" y="9" width="6" height="6" rx="1"/>
-                                            <path stroke-linecap="round" d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>
-                                        </svg>
-                                    </div>
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing agent key',
+            ], 401);
+        }
 
-                                    <div>
-                                        <p class="font-bold text-white">
-                                            {{ $installation->agent->name ?? 'Unknown Agent' }}
-                                        </p>
-                                        <p class="text-xs text-slate-600">
-                                            {{ $installation->agent->slug ?? 'unknown' }} / {{ $installation->agent->category ?? 'General' }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </td>
+        $agentKey = trim(substr($header, 7));
 
-                            <td class="px-5 py-4">
-                                <a href="{{ $installation->project ? route('projects.show', $installation->project) : '#' }}"
-                                   class="text-sm font-bold text-cyan-300 hover:text-cyan-200">
-                                    {{ $installation->project->domain ?? $installation->project->name ?? '-' }}
-                                </a>
-                            </td>
+        $installation = ProjectAgent::where('api_key', $agentKey)->first();
 
-                            <td class="px-5 py-4 text-sm font-semibold text-slate-300">
-                                {{ $installation->project->client->company_name ?? '-' }}
-                            </td>
+        if (!$installation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid agent key',
+            ], 401);
+        }
 
-                            <td class="px-5 py-4 text-sm font-semibold text-slate-300">
-                                {{ $installation->version ?? '-' }}
-                            </td>
+        $installation->update([
+            'status'       => 'online',
+            'last_seen_at' => now(),
+            'site_url'     => $request->site_url,
+            'wp_version'   => $request->wp_version,
+            'php_version'  => $request->php_version,
+            'version'      => $request->plugin_version ?? '1.0.0',
+        ]);
 
-                            <td class="px-5 py-4 text-sm font-semibold text-slate-400">
-                                {{ $lastSeen }}
-                            </td>
+        $installation->project->update([
+            'is_connected' => true,
+            'status'       => 'active',
+            'last_seen_at' => now(),
+        ]);
 
-                            <td class="px-5 py-4">
-                                <span class="inline-flex items-center gap-2 text-sm font-bold {{ $statusClass }}">
-                                    <span class="h-2 w-2 rounded-full {{ $dotClass }}"></span>
-                                    {{ ucfirst($status) }}
-                                </span>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-5 py-12 text-center text-slate-500">
-                                No agent installations found.
-                            </td>
-                        </tr>
-                    @endforelse
+        return response()->json([
+            'success' => true,
+            'message' => 'Heartbeat received',
+        ]);
+    }
 
-                    @if($installations->isNotEmpty())
-                        <tr x-show="visibleRows === 0" x-cloak>
-                            <td colspan="6" class="px-5 py-12 text-center text-slate-500">
-                                No installations match your filters.
-                            </td>
-                        </tr>
-                    @endif
-                </tbody>
-            </table>
-        </div>
+    /**
+     * Legacy logs
+     */
+    public function storeLog(Request $request)
+    {
+        $request->validate([
+            'type'       => ['required', 'string'],
+            'event'      => ['required', 'string'],
+            'severity'   => ['nullable', 'string'],
+            'site_url'   => ['nullable', 'string'],
+            'username'   => ['nullable', 'string'],
+            'user_id'    => ['nullable'],
+            'role'       => ['nullable', 'string'],
+            'data'       => ['nullable', 'array'],
+        ]);
 
-        {{-- PAGINATION --}}
-        <x-pagination :paginator="$installations" />
-    </div>
-</x-dashboard-layout>
+        $header = $request->header('Authorization');
+
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing agent key',
+            ], 401);
+        }
+
+        $agentKey = trim(substr($header, 7));
+
+        $installation = ProjectAgent::where('api_key', $agentKey)->first();
+
+        if (!$installation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid agent key',
+            ], 401);
+        }
+
+        AgentLog::create([
+            'project_id' => $installation->project_id,
+            'agent_id' => $installation->agent_id,
+            'site_url' => $request->site_url,
+            'type' => $request->type,
+            'event' => $request->event,
+            'severity' => $request->severity ?? 'info',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'username' => $request->username,
+            'user_id' => $request->user_id,
+            'role' => $request->role,
+            'data' => $request->data ?? [],
+            'created_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Log stored',
+        ]);
+    }
+
+    /**
+     * Main audit logs
+     */
+    public function auditLog(Request $request)
+    {
+        $header = $request->header('Authorization');
+
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing API key'
+            ], 401);
+        }
+
+        $apiKey = trim(str_replace('Bearer ', '', $header));
+
+        $project = Projects::where('api_key', $apiKey)->first();
+
+        if (!$project) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid API key'
+            ], 401);
+        }
+
+       $event = (string) $request->event;
+
+$severity = $request->severity ?? 'info';
+
+$actor = is_string($request->actor)
+    ? json_decode($request->actor, true)
+    : $request->actor;
+
+$target = is_string($request->target)
+    ? json_decode($request->target, true)
+    : $request->target;
+
+$before = is_string($request->before)
+    ? json_decode($request->before, true)
+    : $request->before;
+
+$after = is_string($request->after)
+    ? json_decode($request->after, true)
+    : $request->after;
+
+$metadata = is_string($request->metadata)
+    ? json_decode($request->metadata, true)
+    : ($request->metadata ?? []);
+
+$category = $this->auditCategory($event);
+
+        AuditLog::create([
+            'project_id' => $project->id,
+            'category' => $category,
+            'event' => $event,
+            'severity' => $severity,
+            'site_url' => $request->site_url,
+            'ip' => $request->ip(),
+            'user_agent' => $request->user_agent,
+          'actor' => $actor,
+'target' => $target,
+'before' => $before,
+'after' => $after,
+'metadata' => $metadata,
+            'event_created_at' => $request->created_at,
+        ]);
+
+        /**
+         * Health reports
+         */
+        if ($category === 'health' && $event === 'health_scan_completed') {
+
+            HealthReport::create([
+                'project_id' => $project->id,
+                'site_url' => $request->site_url,
+                'score' => $metadata['score'] ?? [],
+                'risk_level' => $metadata['score']['risk_level'] ?? null,
+                'issues' => $metadata['issues'] ?? [],
+                'reports' => $metadata['reports'] ?? [],
+                'metadata' => $metadata,
+                'event_created_at' => $request->created_at,
+            ]);
+        }
+
+        /**
+         * File security reports
+         */
+        if ($category === 'file_security') {
+
+            FileScanReport::create([
+                'project_id' => $project->id,
+                'site_url' => $request->site_url,
+                'event' => $event,
+                'severity' => $severity,
+                'target' => $request->target,
+                'metadata' => $metadata,
+                'event_created_at' => $request->created_at,
+            ]);
+        }
+
+        /**
+         * Security incidents
+         */
+        if ($this->shouldCreateIncident($event, $severity, $metadata)) {
+
+            Incident::create([
+                'project_id' => $project->id,
+                'category' => $category,
+                'event' => $event,
+                'severity' => $severity,
+                'site_url' => $request->site_url,
+                'ip' => $request->ip(),
+                'user_agent' => $request->user_agent,
+                'target' => $target,
+'metadata' => $metadata,
+                'status' => 'open',
+                'event_created_at' => $request->created_at,
+            ]);
+        }
+
+        $project->update([
+            'last_seen_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'category' => $category,
+        ]);
+    }
+
+    /**
+     * Detect audit category
+     */
+    private function auditCategory(string $event): string
+    {
+        if (
+            str_contains($event, 'login') ||
+            str_contains($event, 'password')
+        ) {
+            return 'auth';
+        }
+
+        if (
+            str_starts_with($event, 'firewall_') ||
+            str_contains($event, 'xss') ||
+            str_contains($event, 'sqli')
+        ) {
+            return 'firewall';
+        }
+
+        if (
+            str_contains($event, 'blocking') ||
+            str_contains($event, 'banned') ||
+            str_contains($event, 'unbanned')
+        ) {
+            return 'blocking';
+        }
+
+        if (
+            str_contains($event, 'file_') ||
+            str_contains($event, 'upload_') ||
+            str_contains($event, 'quarantine') ||
+            str_contains($event, 'suspicious_file')
+        ) {
+            return 'file_security';
+        }
+
+        if (
+            str_contains($event, 'health') ||
+            str_contains($event, 'site_health') ||
+            str_contains($event, 'resource')
+        ) {
+            return 'health';
+        }
+
+        return 'audit';
+    }
+
+    /**
+     * Should create incident
+     */
+    private function shouldCreateIncident(
+        string $event,
+        string $severity,
+        array $metadata = []
+    ): bool {
+
+        if (in_array($severity, ['critical', 'high'], true)) {
+            return true;
+        }
+
+        if (in_array($event, [
+            'ip_banned',
+            'file_quarantined',
+            'upload_php_detected',
+            'suspicious_file_detected',
+            'firewall_threat_detected',
+        ], true)) {
+            return true;
+        }
+
+        if (($metadata['action'] ?? null) === 'ban') {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function vulnerabilityInventory(Request $request)
+    {
+        $header = $request->header('Authorization');
+
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing API key'
+            ], 401);
+        }
+
+        $apiKey = trim(substr($header, 7));
+
+        $project = Projects::where('api_key', $apiKey)->first();
+
+        if (!$project) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid API key'
+            ], 401);
+        }
+
+        $plugins = $this->arrayPayload($request->input('plugins', []));
+        $themes = $this->arrayPayload($request->input('themes', []));
+
+        SiteInventory::create([
+            'project_id' => $project->id,
+            'site_url' => $request->input('site_url'),
+            'wp_version' => $request->input('wp_version'),
+            'php_version' => $request->input('php_version'),
+            'plugins' => $plugins,
+            'themes' => $themes,
+            'collected_at' => $request->input('collected_at') ?: now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'plugins_count' => count($plugins),
+            'themes_count' => count($themes),
+        ]);
+    }
+  
+    private function arrayPayload(mixed $value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && trim($value) !== '') {
+            $decoded = json_decode($value, true);
+
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+}

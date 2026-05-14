@@ -52,7 +52,11 @@
         x-data="{
             search: '',
             status: 'all',
+            scanningProject: null,
             projects: @js($projectFilterItems),
+            startScan(id) {
+                this.scanningProject = id;
+            },
             matchesProject(project) {
                 if (!project) return false;
 
@@ -96,6 +100,29 @@
                 </a>
             </div>
         </div>
+
+        @if (session('success'))
+            <div class="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-300">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm font-bold text-red-300">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if (session('scan_errors'))
+            <div class="rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+                <p class="font-bold">Some scan checks failed:</p>
+                <ul class="mt-2 list-disc space-y-1 pl-5">
+                    @foreach ((array) session('scan_errors') as $scanError)
+                        <li>{{ $scanError }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         {{-- FILTERS --}}
         <div class="flex items-center justify-between">
@@ -296,24 +323,25 @@
                                         </svg>
                                     </a>
 
-                                    <button type="button"
-                                            title="Run scan"
-                                            aria-label="Run scan"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-amber-400/20 text-amber-300 hover:bg-amber-400/10 transition">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 2 4 14h7l-1 8 10-13h-7l1-7z"/>
-                                        </svg>
-                                    </button>
+                                    <form method="POST" action="{{ route('projects.vulnerability.scan', $project) }}" @submit="startScan({{ $project->id }})">
+                                        @csrf
+                                        <button type="submit"
+                                                title="Run scan"
+                                                aria-label="Run scan"
+                                                :disabled="scanningProject === {{ $project->id }}"
+                                                class="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-amber-400/20 text-amber-300 transition hover:bg-amber-400/10 disabled:cursor-wait disabled:border-cyan-400/30 disabled:bg-cyan-400/10 disabled:text-cyan-200">
+                                            <span x-show="scanningProject === {{ $project->id }}" x-cloak class="scan-sweep pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-300/25 to-transparent"></span>
+                                            <svg x-show="scanningProject !== {{ $project->id }}" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 2 4 14h7l-1 8 10-13h-7l1-7z"/>
+                                            </svg>
+                                            <svg x-show="scanningProject === {{ $project->id }}" x-cloak class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
+                                                <circle cx="12" cy="12" r="8" stroke-dasharray="10 8"/>
+                                                <path stroke-linecap="round" d="M12 12l5-4"/>
+                                            </svg>
+                                        </button>
+                                    </form>
 
-                                    <button type="button"
-                                            title="Security actions"
-                                            aria-label="Security actions"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 text-slate-400 hover:border-cyan-400/30 hover:text-cyan-300 transition">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-5"/>
-                                        </svg>
-                                    </button>
+                                
                                 </div>
                             </td>
                         </tr>

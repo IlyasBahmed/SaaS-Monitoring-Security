@@ -1,9 +1,10 @@
 <x-dashboard-layout>
     @php
-        $projects = $client->projects;
+        $allProjects = $clientProjects ?? collect($client->projects ?? []);
+        $projects = $projects ?? $allProjects;
         $clientStatus = strtolower($client->status ?? 'active');
-        $activeProjects = $projects->filter(fn ($project) => strtolower($project->status ?? '') === 'active')->count();
-        $offlineProjects = $projects->filter(fn ($project) => strtolower($project->status ?? 'offline') !== 'active')->count();
+        $activeProjects = $allProjects->filter(fn ($project) => strtolower($project->status ?? '') === 'active')->count();
+        $offlineProjects = $allProjects->filter(fn ($project) => strtolower($project->status ?? 'offline') !== 'active')->count();
 
         $scoreForProject = function ($project) {
             $status = strtolower($project->status ?? 'offline');
@@ -24,14 +25,14 @@
             return max(25, min(99, $score));
         };
 
-        $averageScore = $projects->isNotEmpty()
-            ? (int) round($projects->avg(fn ($project) => $scoreForProject($project)))
+        $averageScore = $allProjects->isNotEmpty()
+            ? (int) round($allProjects->avg(fn ($project) => $scoreForProject($project)))
             : 0;
-        $totalAlerts = $projects->sum(fn ($project) => $project->alerts_count ?? 0);
-        $totalIncidents = $projects->sum(fn ($project) => $project->incidents_count ?? 0);
+        $totalAlerts = $allProjects->sum(fn ($project) => $project->alerts_count ?? 0);
+        $totalIncidents = $allProjects->sum(fn ($project) => $project->incidents_count ?? 0);
         $riskLevel = $averageScore >= 85 ? 'Low' : ($averageScore >= 65 ? 'Medium' : 'High');
         $riskClass = $averageScore >= 85 ? 'text-emerald-300' : ($averageScore >= 65 ? 'text-amber-300' : 'text-red-300');
-        $lastActivity = $projects
+        $lastActivity = $allProjects
             ->map(fn ($project) => $project->agent_last_seen_at ?? $project->updated_at)
             ->filter()
             ->map(fn ($date) => \Illuminate\Support\Carbon::parse($date))
@@ -91,7 +92,7 @@
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div class="rounded-xl border border-slate-800 bg-[#07111f] p-5">
                     <p class="text-xs font-bold text-slate-500">Total Projects</p>
-                    <p class="mt-3 text-2xl font-black text-white">{{ $projects->count() }}</p>
+                    <p class="mt-3 text-2xl font-black text-white">{{ $allProjects->count() }}</p>
                 </div>
                 <div class="rounded-xl border border-slate-800 bg-[#07111f] p-5">
                     <p class="text-xs font-bold text-slate-500">Active Projects</p>
@@ -171,6 +172,10 @@
                 </table>
             </div>
         </section>
+
+        @if ($projects instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+            <x-pagination :paginator="$projects" />
+        @endif
 
         <section>
             <p class="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Security Summary</p>

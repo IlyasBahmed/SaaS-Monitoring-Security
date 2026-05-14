@@ -1,5 +1,53 @@
 <x-dashboard-layout>
-<div x-data="{ search: '', status: 'all' }" class="space-y-6">
+@php
+    $clientCollection = $clients instanceof \Illuminate\Pagination\AbstractPaginator
+        ? $clients->getCollection()
+        : collect($clients);
+
+    $totalClients = method_exists($clients, 'total') ? $clients->total() : $clientCollection->count();
+    $activeClients = $activeClients ?? $clientCollection->where('status', 'active')->count();
+    $clientFilterItems = $clientCollection
+        ->map(fn ($client) => [
+            'status' => strtolower($client->status ?? 'active'),
+            'search' => strtolower(trim(implode(' ', [
+                $client->company_name ?? '',
+                $client->email ?? '',
+                $client->phone ?? '',
+                $client->address ?? '',
+                $client->status ?? '',
+            ]))),
+        ])
+        ->values()
+        ->all();
+@endphp
+
+<div
+    x-data="{
+        search: '',
+        status: 'all',
+        clients: @js($clientFilterItems),
+        matchesClient(client) {
+            if (!client) return false;
+
+            const query = this.search.toLowerCase().trim();
+            const matchesSearch = !query || client.search.includes(query);
+            const matchesStatus = this.status === 'all' || client.status === this.status;
+
+            return matchesSearch && matchesStatus;
+        },
+        get visibleClients() {
+            return this.clients.filter((client) => this.matchesClient(client)).length;
+        },
+        clearFilters() {
+            this.search = '';
+            this.status = 'all';
+        },
+        get hasFilters() {
+            return this.search.trim() !== '' || this.status !== 'all';
+        }
+    }"
+    class="space-y-6"
+>
 
     {{-- HEADER --}}
     <div class="flex items-start justify-between">
@@ -7,7 +55,7 @@
             <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">Management</p>
             <h1 class="mt-2 text-3xl font-black text-white">Clients</h1>
             <p class="mt-1 text-sm text-slate-500">
-                {{ $clients->count() }} total · {{ $clients->where('status','active')->count() }} active
+                {{ $totalClients }} total &middot; {{ $activeClients }} active
             </p>
         </div>
 
@@ -84,10 +132,8 @@
                     @endphp
 
                     <tr
-                        x-show="
-                            (status === 'all' || status === '{{ $clientStatus }}') &&
-                            ('{{ strtolower(($client->company_name ?? '').' '.($client->email ?? '')) }}'.includes(search.toLowerCase()))
-                        "
+                        x-show="matchesClient(clients[{{ $loop->index }}])"
+                        x-cloak
                         class="hover:bg-white/[0.025] transition">
 
                         {{-- CLIENT --}}
@@ -180,6 +226,22 @@
                         </td>
                     </tr>
                 @endforelse
+
+                @if($clientCollection->isNotEmpty())
+                    <tr x-show="visibleClients === 0" x-cloak>
+                        <td colspan="5" class="px-5 py-12 text-center">
+                            <p class="text-sm font-bold text-slate-400">No clients match your filters.</p>
+                            <button
+                                type="button"
+                                x-show="hasFilters"
+                                @click="clearFilters()"
+                                class="mt-3 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20"
+                            >
+                                Clear filters
+                            </button>
+                        </td>
+                    </tr>
+                @endif
             </tbody>
         </table>
     </div>

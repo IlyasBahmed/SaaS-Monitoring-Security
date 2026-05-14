@@ -34,5 +34,7 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'wpscan' => [
+        'token' => env('WPSCAN_API_TOKEN'),
+    ],
 ];
