@@ -76,8 +76,7 @@
                         name="status"
                         class="h-11 w-full rounded-xl border border-slate-700 bg-[#020617] px-4 text-sm font-bold text-slate-300 outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/10">
                         <option value="active" @selected(old('status', 'active') === 'active')>Active</option>
-                        <option value="warning" @selected(old('status') === 'warning')>Warning</option>
-                        <option value="critical" @selected(old('status') === 'critical')>Critical</option>
+                        <option value="pending" @selected(old('status') === 'pending')>Pending</option>
                     </select>
                     @error('status')
                         <span class="block text-xs font-bold text-red-400">{{ $message }}</span>

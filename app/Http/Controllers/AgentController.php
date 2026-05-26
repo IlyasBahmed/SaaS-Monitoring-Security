@@ -12,139 +12,302 @@ use App\Models\SiteInventory;
 use App\Models\AgentLog;
 use App\Models\AuditLog;
 use App\Models\Incident;
+use App\Jobs\AnalyzeLogsWithGroq;
 
 class AgentController extends Controller
 {
     /**
      * Verify plugin installation
      */
-    public function verify(Request $request)
-    {
-        $request->validate([
-            'site_url'       => ['required', 'url'],
-            'agent_slug'     => ['required', 'string'],
-            'wp_version'     => ['nullable', 'string'],
-            'php_version'    => ['nullable', 'string'],
-            'plugin_version' => ['nullable', 'string'],
-        ]);
+   public function verify(Request $request)
+{
+    $request->validate([
+        'site_url'       => ['required', 'url'],
+        'agent_slug'     => ['required', 'string'],
+        'wp_version'     => ['nullable', 'string'],
+        'php_version'    => ['nullable', 'string'],
+        'plugin_version' => ['nullable', 'string'],
+    ]);
 
-        $header = $request->header('Authorization');
+    $header = $request->header('Authorization');
 
-        if (!$header || !str_starts_with($header, 'Bearer ')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Missing API key',
-            ], 401);
-        }
-
-        $apiKey = trim(substr($header, 7));
-
-        $project = Projects::where('api_key', $apiKey)->first();
-
-        if (!$project) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid API key',
-            ], 401);
-        }
-
-        $agent = agents::where('slug', $request->agent_slug)->first();
-
-        if (!$agent) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Agent not found',
-            ], 404);
-        }
-
-        $agentKey = 'agent_' . Str::random(40);
-
-        $installation = ProjectAgent::updateOrCreate(
-            [
-                'project_id' => $project->id,
-                'agent_id'   => $agent->id,
-            ],
-            [
-                'site_url'     => $request->site_url,
-                'wp_version'   => $request->wp_version,
-                'php_version'  => $request->php_version,
-                'version'      => $request->plugin_version ?? '1.0.0',
-                'status'       => 'online',
-                'api_key'      => $agentKey,
-                'connected_at' => now(),
-                'last_seen_at' => now(),
-            ]
-        );
-
-        $project->update([
-            'is_connected' => true,
-            'connected_at' => $project->connected_at ?? now(),
-            'last_seen_at' => now(),
-            'status'       => 'active',
-            'domain'       => $project->domain ?: $request->site_url,
-            'stack'        => 'wordpress',
-        ]);
-
+    if (!$header || !str_starts_with($header, 'Bearer ')) {
         return response()->json([
-            'success'       => true,
-            'project_id'    => $project->id,
+            'success' => false,
+            'message' => 'Missing API key',
+        ], 401);
+    }
+
+    $apiKey = trim(substr($header, 7));
+
+    $project = Projects::where('api_key', $apiKey)->first();
+
+    if (!$project) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid API key',
+        ], 401);
+    }
+
+    $agent = agents::where('slug', $request->agent_slug)->first();
+
+    if (!$agent) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Agent not found',
+        ], 404);
+    }
+
+    $installation = ProjectAgent::where([
+        'project_id' => $project->id,
+        'agent_id'   => $agent->id,
+    ])->first();
+
+    if ($installation && in_array($installation->status, ['pending', 'offline', 'disabled'], true)) {
+        return response()->json([
+            'success' => true,
+            'project_id' => $project->id,
             'agent_api_key' => $installation->api_key,
-            'message'       => 'Connected successfully',
+            'status' => $installation->status,
+            'command' => 'disconnect',
+            'message' => 'Agent disabled from dashboard',
         ]);
     }
+
+    $agentKey = $installation?->api_key ?: 'agent_' . Str::random(40);
+
+    $installation = ProjectAgent::updateOrCreate(
+        [
+            'project_id' => $project->id,
+            'agent_id'   => $agent->id,
+        ],
+        [
+            'site_url'     => $request->site_url,
+            'wp_version'   => $request->wp_version,
+            'php_version'  => $request->php_version,
+            'version'      => $request->plugin_version ?? '1.0.0',
+            'status'       => 'online',
+            'api_key'      => $agentKey,
+            'connected_at' => $installation?->connected_at ?? now(),
+            'last_seen_at' => now(),
+        ]
+    );
+
+    $project->update([
+        'is_connected' => true,
+        'connected_at' => $project->connected_at ?? now(),
+        'last_seen_at' => now(),
+        'status'       => 'active',
+        'domain'       => $project->domain ?: $request->site_url,
+        'stack'        => 'wordpress',
+    ]);
+
+    return response()->json([
+        'success'       => true,
+        'project_id'    => $project->id,
+        'agent_api_key' => $installation->api_key,
+        'status'        => $installation->status,
+        'command'       => null,
+        'message'       => 'Connected successfully',
+    ]);
+}
 
     /**
      * Heartbeat
      */
     public function heartbeat(Request $request)
-    {
-        $request->validate([
-            'site_url'       => ['required', 'url'],
-            'wp_version'     => ['nullable', 'string'],
-            'php_version'    => ['nullable', 'string'],
-            'plugin_version' => ['nullable', 'string'],
-        ]);
+{
+    $request->validate([
+        'site_url'       => ['required', 'url'],
+        'wp_version'     => ['nullable', 'string'],
+        'php_version'    => ['nullable', 'string'],
+        'plugin_version' => ['nullable', 'string'],
+    ]);
 
-        $header = $request->header('Authorization');
+    $header = $request->header('Authorization');
 
-        if (!$header || !str_starts_with($header, 'Bearer ')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Missing agent key',
-            ], 401);
-        }
+    if (!$header || !str_starts_with($header, 'Bearer ')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Missing agent key',
+        ], 401);
+    }
 
-        $agentKey = trim(substr($header, 7));
+    $agentKey = trim(substr($header, 7));
 
-        $installation = ProjectAgent::where('api_key', $agentKey)->first();
+    $installation = ProjectAgent::where('api_key', $agentKey)->first();
 
-        if (!$installation) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid agent key',
-            ], 401);
-        }
+    if (!$installation) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid agent key',
+        ], 401);
+    }
 
+    $meta = $installation->meta ?? [];
+    $command = $meta['command'] ?? null;
+
+    if ($command === 'disconnect' || $installation->status === 'pending' || $installation->status === 'offline') {
         $installation->update([
-            'status'       => 'online',
-            'last_seen_at' => now(),
+            'status'       => 'offline',
+            'last_seen_at' => null,
             'site_url'     => $request->site_url,
             'wp_version'   => $request->wp_version,
             'php_version'  => $request->php_version,
             'version'      => $request->plugin_version ?? '1.0.0',
+            'meta'         => array_merge($meta, [
+                'last_command' => 'disconnect',
+                'command_executed_at' => now()->toIso8601String(),
+                'command' => null,
+            ]),
         ]);
 
+        if ($installation->project) {
+            $installation->project->update([
+                'is_connected' => false,
+                'status'       => 'offline',
+                'last_seen_at' => null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Disconnect command received',
+            'status'  => 'offline',
+            'command' => 'disconnect',
+        ]);
+    }
+
+    $installation->update([
+        'status'       => 'online',
+        'last_seen_at' => now(),
+        'site_url'     => $request->site_url,
+        'wp_version'   => $request->wp_version,
+        'php_version'  => $request->php_version,
+        'version'      => $request->plugin_version ?? '1.0.0',
+    ]);
+
+    if ($installation->project) {
         $installation->project->update([
             'is_connected' => true,
             'status'       => 'active',
             'last_seen_at' => now(),
         ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Heartbeat received',
-        ]);
     }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Heartbeat received',
+        'status'  => 'online',
+        'command' => null,
+    ]);
+}
+ 
+public function auditBatch(Request $request)
+{
+    $header = $request->header('Authorization');
+
+    if (!$header || !str_starts_with($header, 'Bearer ')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Missing API key'
+        ], 401);
+    }
+
+    $apiKey = trim(str_replace('Bearer ', '', $header));
+
+    $project = Projects::where('api_key', $apiKey)->first();
+
+    if (!$project) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid API key'
+        ], 401);
+    }
+
+    $events = $request->input('events', []);
+
+    if (!is_array($events)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid events payload'
+        ], 422);
+    }
+
+    $processed = 0;
+    $incidents = 0;
+
+    foreach ($events as $eventData) {
+        if (!is_array($eventData)) {
+            continue;
+        }
+
+        $event = (string) ($eventData['event'] ?? 'unknown');
+        $severity = $eventData['severity'] ?? 'info';
+
+        $actor = $this->jsonPayload($eventData['actor'] ?? []);
+        $target = $this->jsonPayload($eventData['target'] ?? []);
+        $before = $this->jsonPayload($eventData['before'] ?? []);
+        $after = $this->jsonPayload($eventData['after'] ?? []);
+        $metadata = $this->jsonPayload($eventData['metadata'] ?? []);
+
+        if (!is_array($metadata)) {
+            $metadata = [];
+        }
+
+        $auditLog = AuditLog::create([
+            'project_id' => $project->id,
+            'category' => $this->auditCategory($event, $metadata),
+            'event' => $event,
+            'severity' => $severity,
+            'site_url' => $eventData['site_url'] ?? null,
+            'ip' => $eventData['ip'] ?? null,
+            'user_agent' => $eventData['user_agent'] ?? null,
+            'actor' => is_array($actor) ? $actor : [],
+            'target' => is_array($target) ? $target : [],
+            'before' => is_array($before) ? $before : [],
+            'after' => is_array($after) ? $after : [],
+            'metadata' => $metadata,
+            'event_created_at' => $eventData['created_at'] ?? now(),
+        ]);
+
+        if ($this->shouldCreateIncident($event, $severity, $metadata)) {
+           \Log::info('INCIDENT SHOULD BE CREATED', [
+    'event' => $event,
+    'severity' => $severity,
+]);
+        $this->createOrUpdateIncident(
+                $project,
+                $auditLog,
+                $event,
+                $severity,
+                $eventData['site_url'] ?? null,
+                $eventData['ip'] ?? null,
+                $eventData['user_agent'] ?? null,
+                is_array($target) ? $target : [],
+                $metadata,
+                $eventData['created_at'] ?? now()
+            );
+
+            $incidents++;
+        }
+
+        $processed++;
+    }
+
+    $project->update([
+        'last_seen_at' => now(),
+    ]);
+    $this->triggerAiAnalysis($project->id);
+
+    return response()->json([
+        'success' => true,
+        'processed' => $processed,
+        'incidents' => $incidents,
+    ]);
+}
+
+
 
     /**
      * Legacy logs
@@ -309,7 +472,7 @@ class AgentController extends Controller
         $project->update([
             'last_seen_at' => now(),
         ]);
-
+$this->triggerAiAnalysis($project->id);
         return response()->json([
             'success' => true,
             'category' => $this->auditCategory($event, $metadata),
@@ -399,158 +562,161 @@ class AgentController extends Controller
     /**
      * Audit category.
      */
-    private function auditCategory(string $event, array $metadata = []): string
-    {
-        if (
-            str_contains($event, 'blocking') ||
-            str_contains($event, 'firewall') ||
-            str_contains($event, 'sqli') ||
-            str_contains($event, 'sql') ||
-            str_contains($event, 'xss') ||
-            str_contains($event, 'honeypot') ||
-            str_contains($event, 'rate_limit') ||
-            str_contains($event, 'ip_banned')
-        ) {
-            return 'firewall';
-        }
-
-        if (
-            str_contains($event, 'login') ||
-            str_contains($event, 'auth') ||
-            str_contains($event, 'user')
-        ) {
-            return 'auth';
-        }
-
-        if (
-            str_contains($event, 'file') ||
-            str_contains($event, 'upload') ||
-            str_contains($event, 'quarantine')
-        ) {
-            return 'file_security';
-        }
-
-        if (
-            str_contains($event, 'vulnerab') ||
-            str_contains($event, 'plugin') ||
-            str_contains($event, 'theme') ||
-            str_contains($event, 'health')
-        ) {
-            return 'vulnerability';
-        }
-
-        return 'audit';
+private function auditCategory(string $event, array $metadata = []): string
+{
+    if (
+        str_contains($event, 'blocking') ||
+        str_contains($event, 'firewall') ||
+        str_contains($event, 'sqli') ||
+        str_contains($event, 'sql') ||
+        str_contains($event, 'xss') ||
+        str_contains($event, 'honeypot') ||
+        str_contains($event, 'rate_limit') ||
+        str_contains($event, 'ip_banned')
+    ) {
+        return 'firewall';
     }
 
+    if (
+        str_contains($event, 'login') ||
+        str_contains($event, 'auth') ||
+        str_contains($event, 'user')
+    ) {
+        return 'auth';
+    }
+
+    if (
+        str_contains($event, 'file') ||
+        str_contains($event, 'upload') ||
+        str_contains($event, 'quarantine')
+    ) {
+        return 'file_security';
+    }
+
+    if (
+        str_contains($event, 'plugin') ||
+        str_contains($event, 'theme')
+    ) {
+        return 'plugin_theme';
+    }
+
+    if (
+        str_contains($event, 'post') ||
+        str_contains($event, 'page') ||
+        str_contains($event, 'content')
+    ) {
+        return 'content';
+    }
+
+    if (
+        str_contains($event, 'setting') ||
+        str_contains($event, 'option')
+    ) {
+        return 'settings';
+    }
+
+    if (
+        str_contains($event, 'vulnerab') ||
+        str_contains($event, 'health')
+    ) {
+        return 'vulnerability';
+    }
+
+    return 'audit';
+}
     /**
      * Decide if audit log should create/update incident.
      */
-    private function shouldCreateIncident(
-        string $event,
-        string $severity,
-        array $metadata = []
-    ): bool {
-        if ($event === 'ip_banned') {
-            $reason = $metadata['reason'] ?? null;
+private function shouldCreateIncident(
+    string $event,
+    string $severity,
+    array $metadata = []
+): bool {
+    $event = strtolower(trim($event));
+    $severity = strtolower(trim($severity));
 
-            return in_array($reason, [
-                'repeated_attacks',
-                'multiple_attacks',
-                'critical_attack',
-                'sqli_detected',
-                'xss_detected',
-                'honeypot_trap_detected',
-                'login_rate_limit',
-                'wp_admin_rate_limit',
-                'suspicious_activity',
-            ], true);
-        }
-
-        if ($event === 'blocking_action') {
-            $action = $metadata['action'] ?? null;
-            $score = (int) ($metadata['score'] ?? 0);
-            $types = $metadata['types'] ?? [];
-
-            if (in_array($action, ['block', 'ban', 'blocked', 'banned'], true)) {
-                return true;
-            }
-
-            if ($score >= 50 && is_array($types)) {
-                return in_array('sql_injection', $types, true)
-                    || in_array('sqli', $types, true)
-                    || in_array('xss', $types, true)
-                    || in_array('command_injection', $types, true)
-                    || in_array('path_traversal', $types, true);
-            }
-
-            return false;
-        }
-
-        if (in_array($event, [
-            'file_quarantined',
-            'upload_php_detected',
-            'suspicious_upload_file_detected',
-            'upload_blocked_by_firewall',
-        ], true)) {
-            return true;
-        }
-
-        if (in_array($event, [
-            'suspicious_login_detected',
-            'admin_login_from_new_device',
-        ], true)) {
-            return true;
-        }
-
-        if ($event === 'rate_limit_exceeded') {
-            return true;
-        }
-
-        if (in_array($event, [
-            'critical_vulnerability_detected',
-            'vulnerable_plugin_detected',
-            'vulnerable_theme_detected',
-        ], true)) {
-            return in_array($severity, ['high', 'critical'], true);
-        }
-
-        if ($severity === 'critical') {
-            return true;
-        }
-
-        return false;
+    // SQLi / XSS = incident مباشرة
+    if (in_array($event, [
+        'sqli_detected',
+        'sql_injection_detected',
+        'xss_detected',
+        'xss_attempt_detected',
+    ], true)) {
+        return true;
     }
+
+    // uploads / malware / critical security actions = incident
+    if (in_array($event, [
+        'command_injection_detected',
+        'path_traversal_detected',
+        'xmlrpc_blocked',
+        'honeypot_triggered',
+        'rate_limit_exceeded',
+        'ip_banned',
+        'file_quarantined',
+        'upload_php_detected',
+        'suspicious_upload_file_detected',
+        'upload_blocked_by_firewall',
+        'suspicious_login_detected',
+        'admin_login_from_new_device',
+        'critical_vulnerability_detected',
+        'vulnerable_plugin_detected',
+        'vulnerable_theme_detected',
+    ], true)) {
+        return in_array($severity, ['medium', 'high', 'critical'], true);
+    }
+
+    // blocking_action: action=log ماشي incident، block/ban ولا score >= 50 incident
+    if ($event === 'blocking_action') {
+        $action = strtolower((string) ($metadata['action'] ?? ''));
+        $score = (int) ($metadata['score'] ?? 0);
+
+        return in_array($action, ['block', 'blocked', 'ban', 'banned'], true)
+            || $score >= 50;
+    }
+
+    return $severity === 'critical';
+}
 
     /**
      * Create one incident or update existing open incident.
      */
-    private function createOrUpdateIncident(
-        Projects $project,
-        AuditLog $auditLog,
-        string $event,
-        string $severity,
-        ?string $siteUrl,
-        ?string $ip,
-        ?string $userAgent,
-        mixed $target,
-        array $metadata,
-        mixed $eventCreatedAt = null
-    ): Incident {
-        $incidentKey = $this->incidentKey(
-            $project->id,
-            $event,
-            $target,
-            $metadata,
-            $ip
-        );
+   private function createOrUpdateIncident(
+    Projects $project,
+    AuditLog $auditLog,
+    string $event,
+    string $severity,
+    ?string $siteUrl,
+    ?string $ip,
+    ?string $userAgent,
+    mixed $target,
+    array $metadata,
+    mixed $eventCreatedAt = null
+): Incident {
+    $incidentKey = $this->incidentKey(
+        $project->id,
+        $event,
+        $target,
+        $metadata,
+        $ip
+    );
 
-        $incident = Incident::where('project_id', $project->id)
-            ->where('incident_key', $incidentKey)
-            ->whereIn('status', ['open', 'investigating'])
-            ->first();
+    \Log::info('INCIDENT CREATE/UPDATE START', [
+        'project_id' => $project->id,
+        'event' => $event,
+        'severity' => $severity,
+        'incident_key' => $incidentKey,
+        'ip' => $ip,
+    ]);
 
-        if (!$incident) {
-            return Incident::create([
+    $incident = Incident::where('project_id', $project->id)
+        ->where('incident_key', $incidentKey)
+        ->whereIn('status', ['open', 'investigating'])
+        ->first();
+
+    if (!$incident) {
+        try {
+            $incident = Incident::create([
                 'project_id' => $project->id,
                 'incident_key' => $incidentKey,
                 'category' => $this->incidentCategory($event, $metadata),
@@ -561,20 +727,38 @@ class AgentController extends Controller
                 'user_agent' => $userAgent,
                 'target' => is_array($target) ? $target : [],
                 'metadata' => [
-                    'related_audit_log_ids' => [$auditLog->id],
+                    'related_audit_log_ids' => [(string) $auditLog->id],
                     'events' => [$event],
                     'count' => 1,
-                    'first_seen_at' => now(),
-                    'last_seen_at' => now(),
+                    'first_seen_at' => now()->toDateTimeString(),
+                    'last_seen_at' => now()->toDateTimeString(),
                     'action_taken' => $this->incidentActionTaken($event, $metadata),
                     'needs_review' => true,
                     'latest_metadata' => $metadata,
                 ],
                 'status' => 'open',
-                'event_created_at' => $eventCreatedAt ?? now(),
+                'event_created_at' => $eventCreatedAt ?: now(),
             ]);
-        }
 
+            \Log::info('INCIDENT CREATED SUCCESSFULLY', [
+                'incident_id' => $incident->id ?? null,
+                'event' => $event,
+            ]);
+
+            return $incident;
+
+        } catch (\Throwable $e) {
+            \Log::error('INCIDENT CREATE FAILED', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            throw $e;
+        }
+    }
+
+    try {
         $currentMetadata = is_array($incident->metadata)
             ? $incident->metadata
             : [];
@@ -582,77 +766,69 @@ class AgentController extends Controller
         $logIds = $currentMetadata['related_audit_log_ids'] ?? [];
         $events = $currentMetadata['events'] ?? [];
 
-        $logIds[] = $auditLog->id;
+        $logIds[] = (string) $auditLog->id;
         $events[] = $event;
 
         $currentMetadata['related_audit_log_ids'] = array_values(array_unique($logIds));
         $currentMetadata['events'] = array_values(array_unique($events));
         $currentMetadata['count'] = (int) ($currentMetadata['count'] ?? 0) + 1;
-        $currentMetadata['last_seen_at'] = now();
+        $currentMetadata['last_seen_at'] = now()->toDateTimeString();
         $currentMetadata['latest_metadata'] = $metadata;
 
         $incident->update([
             'severity' => $this->maxSeverity($incident->severity, $severity),
             'metadata' => $currentMetadata,
-            'event_created_at' => $eventCreatedAt ?? $incident->event_created_at,
+            'event_created_at' => $eventCreatedAt ?: $incident->event_created_at,
+        ]);
+
+        \Log::info('INCIDENT UPDATED SUCCESSFULLY', [
+            'incident_id' => $incident->id ?? null,
+            'event' => $event,
+            'count' => $currentMetadata['count'],
         ]);
 
         return $incident;
+
+    } catch (\Throwable $e) {
+        \Log::error('INCIDENT UPDATE FAILED', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+
+        throw $e;
     }
+}
 
     /**
      * Build incident key to group related logs into one incident.
      */
     private function incidentKey(
-        mixed $projectId,
-        string $event,
-        mixed $target,
-        array $metadata,
-        ?string $ip
-    ): string {
-        $category = $this->incidentCategory($event, $metadata);
-        $targetArray = is_array($target) ? $target : [];
+    mixed $projectId,
+    string $event,
+    mixed $target,
+    array $metadata,
+    ?string $ip
+): string {
+    $category = $this->incidentCategory($event, $metadata);
+    $targetArray = is_array($target) ? $target : [];
 
-        if ($event === 'ip_banned' || $category === 'firewall') {
-            $targetIp = $metadata['ip']
-                ?? ($targetArray['id'] ?? null)
-                ?? ($targetArray['ip'] ?? null)
-                ?? $ip
-                ?? 'unknown_ip';
+    $targetIp = $metadata['ip']
+        ?? ($targetArray['id'] ?? null)
+        ?? ($targetArray['ip'] ?? null)
+        ?? $ip
+        ?? 'unknown_ip';
 
-            return sha1($projectId . '|firewall|' . $targetIp);
-        }
+    // group incidents by 30-minute window
+    $window = now()->format('Y-m-d-H') . '-' . floor((int) now()->format('i') / 30);
 
-        if ($category === 'file_security') {
-            $file = $targetArray['id']
-                ?? $metadata['relative_path']
-                ?? $metadata['filename']
-                ?? 'unknown_file';
-
-            return sha1($projectId . '|file|' . $file);
-        }
-
-        if ($category === 'auth') {
-            $userId = $targetArray['id']
-                ?? $metadata['user_id']
-                ?? $metadata['username']
-                ?? 'unknown_user';
-
-            return sha1($projectId . '|auth|' . $userId);
-        }
-
-        if ($category === 'vulnerability') {
-            $plugin = $metadata['slug']
-                ?? $metadata['plugin']
-                ?? $metadata['name']
-                ?? 'site';
-
-            return sha1($projectId . '|vulnerability|' . $plugin);
-        }
-
-        return sha1($projectId . '|' . $category . '|' . $event);
-    }
-
+    return sha1(
+        $projectId . '|' .
+        $category . '|' .
+        $targetIp . '|' .
+        $window
+    );
+}
     /**
      * Incident category from event.
      */
@@ -753,4 +929,26 @@ class AgentController extends Controller
             ? $new
             : $old;
     }
+   private function triggerAiAnalysis(int $projectId): void
+{
+    $cacheKey = 'ai_analysis_running_' . $projectId;
+
+    // prevent spam AI jobs
+    if (Cache::has($cacheKey)) {
+        return;
+    }
+
+    // lock 30 seconds
+    Cache::put(
+        $cacheKey,
+        true,
+        now()->addSeconds(30)
+    );
+
+    \Log::info('AI ANALYSIS DISPATCHED', [
+        'project_id' => $projectId,
+    ]);
+
+    AnalyzeLogsWithGroq::dispatch($projectId);
+}
 }

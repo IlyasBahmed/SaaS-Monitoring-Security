@@ -37,4 +37,12 @@ return [
     'wpscan' => [
         'token' => env('WPSCAN_API_TOKEN'),
     ],
+    'groq' => [
+        'key' => env('GROQ_API_KEY'),
+        'model' => env('GROQ_MODEL', 'llama-3.1-8b-instant'),
+    ],
+
+    'cloudflare' => [
+    'token' => env('CLOUDFLARE_API_TOKEN'),
+],
 ];

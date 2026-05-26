@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+@stack('styles')
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>CyberShield</title>
     <script>
         (function () {
@@ -22,10 +24,13 @@
     <div class="min-h-screen flex">
         <x-sidebar />
 
-        <main class="flex-1 overflow-hidden p-6">
-            <x-topbar />
-            {{ $slot }}
+        <main class="min-w-0 flex-1 overflow-y-auto bg-slate-50/70 p-4 text-slate-950 md:p-6 dark:bg-transparent dark:text-white">
+            <div class="mx-auto max-w-[1600px]">
+                <x-topbar />
+                {{ $slot }}
+            </div>
         </main>
     </div>
+    @stack('scripts')
 </body>
 </html>

@@ -10,23 +10,30 @@ class AgentLog extends Model
     protected $collection = 'agent_logs';
 
     protected $fillable = [
-        'project_id',
-        'agent_id',
-        'site_url',
-        'type',
-        'event',
-        'severity',
-        'ip_address',
-        'user_agent',
-        'username',
-        'user_id',
-        'role',
-        'data',
-        'created_at',
-    ];
+    'project_id',
+    'category',
+    'event',
+    'severity',
+    'site_url',
+    'ip',
+    'user_agent',
+    'actor',
+    'target',
+    'before',
+    'after',
+    'metadata',
+    'event_created_at',
+];
 
-    protected $casts = [
-        'data' => 'array',
-        'created_at' => 'datetime',
-    ];
+protected $casts = [
+    'actor' => 'array',
+    'target' => 'array',
+    'before' => 'array',
+    'after' => 'array',
+    'metadata' => 'array',
+];
+public function project()
+{
+    return $this->belongsTo(\App\Models\Projects::class, 'project_id', 'id');
+}
 }

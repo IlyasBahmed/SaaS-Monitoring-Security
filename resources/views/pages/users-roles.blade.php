@@ -251,10 +251,55 @@
                 <h3 class="mt-4 text-sm font-black text-slate-950 dark:text-white">No users found</h3>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Try another search term or reset the filters.</p>
             </div>
-        </div>
 
-        {{-- PAGINATION --}}
-        <x-pagination :paginator="$users" />
+            @if ($users->total() > 0)
+                <div class="flex flex-col gap-4 border-t border-slate-100 px-5 py-4 dark:border-cyan-400/10 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="text-xs font-semibold text-slate-500 dark:text-slate-500">
+                        Showing
+                        <span class="font-black text-slate-800 dark:text-slate-200">{{ $users->firstItem() }}</span>
+                        to
+                        <span class="font-black text-slate-800 dark:text-slate-200">{{ $users->lastItem() }}</span>
+                        of
+                        <span class="font-black text-slate-800 dark:text-slate-200">{{ $users->total() }}</span>
+                        members
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if ($users->onFirstPage())
+                            <span class="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-400 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-600">
+                                Previous
+                            </span>
+                        @else
+                            <a href="{{ $users->previousPageUrl() }}" class="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-cyan-400/10 dark:text-slate-400 dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
+                                Previous
+                            </a>
+                        @endif
+
+                        @foreach ($users->getUrlRange(max(1, $users->currentPage() - 1), min($users->lastPage(), $users->currentPage() + 1)) as $page => $url)
+                            @if ($page === $users->currentPage())
+                                <span class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 text-xs font-black text-cyan-700 dark:text-cyan-300">
+                                    {{ $page }}
+                                </span>
+                            @else
+                                <a href="{{ $url }}" class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-cyan-400/10 dark:text-slate-400 dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
+                                    {{ $page }}
+                                </a>
+                            @endif
+                        @endforeach
+
+                        @if ($users->hasMorePages())
+                            <a href="{{ $users->nextPageUrl() }}" class="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-cyan-400/10 dark:text-slate-400 dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
+                                Next
+                            </a>
+                        @else
+                            <span class="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-400 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-600">
+                                Next
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
 
         {{-- Role Profiles --}}
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -682,7 +727,17 @@
                         .toUpperCase();
                 },
                 statusLabel(status) {
-                    return String(status || 'Inactive').toLowerCase() === 'active' ? 'Active' : 'Inactive';
+                    const normalized = String(status || 'Inactive').toLowerCase();
+
+                    if (normalized === 'active') {
+                        return 'Active';
+                    }
+
+                    if (normalized === 'pending') {
+                        return 'Pending';
+                    }
+
+                    return 'Inactive';
                 },
                 roleBadge(role) {
                     if (role === 'Super Admin') {

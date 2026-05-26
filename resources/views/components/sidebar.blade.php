@@ -1,4 +1,32 @@
 @php
+$user = Auth::user();
+$role = strtolower(trim((string) ($user->role ?? '')));
+$isClient = $role === 'client';
+$isSocAnalyst = $role === 'soc analyst';
+$client = $isClient
+    ? \App\Models\clients::query()->where('user_id', $user?->id)->first()
+    : null;
+$clientProjectIds = $client
+    ? $client->projects()->pluck('id')->map(fn ($id) => (int) $id)->all()
+    : [];
+
+$openAlertsCount = rescue(function () use ($isClient, $clientProjectIds) {
+    return \App\Models\Alert::query()
+        ->when($isClient, fn ($query) => $query->whereIn('project_id', $clientProjectIds))
+        ->where('resolved', false)
+        ->count();
+}, 0, false);
+
+$openIncidentsCount = rescue(function () use ($isClient, $clientProjectIds) {
+    return \App\Models\Incident::query()
+        ->when($isClient, fn ($query) => $query->whereIn('project_id', $clientProjectIds))
+        ->where(function ($query) {
+            $query->whereNull('status')
+                ->orWhereNotIn('status', ['resolved', 'closed']);
+        })
+        ->count();
+}, 0, false);
+
 $items = [
     ['section' => 'OVERVIEW'],
     ['label' => 'Dashboard', 'route' => 'dashboard', 'icon' => 'grid', 'badge' => null],
@@ -9,8 +37,8 @@ $items = [
     ['label' => 'Agents', 'route' => 'agents.index', 'icon' => 'cpu', 'badge' => null],
 
     ['section' => 'SECURITY'],
-    ['label' => 'Incidents', 'route' => 'incidents.index', 'icon' => 'alert', 'badge' => 3, 'badgeColor' => 'red'],
-    ['label' => 'Alerts', 'route' => 'alerts.index', 'icon' => 'bell', 'badge' => 5, 'badgeColor' => 'yellow'],
+    ['label' => 'Incidents', 'route' => 'incidents.index', 'icon' => 'alert', 'badge' => $openIncidentsCount, 'badgeColor' => 'red'],
+    ['label' => 'Alerts', 'route' => 'alerts.index', 'icon' => 'bell', 'badge' => $openAlertsCount, 'badgeColor' => 'yellow'],
     ['label' => 'Cloudflare', 'route' => 'cloudflare.index', 'icon' => 'cloud', 'badge' => null],
 
     ['section' => 'PLATFORM'],
@@ -18,6 +46,40 @@ $items = [
     ['label' => 'Audit Logs', 'route' => 'audit-logs.index', 'icon' => 'edit', 'badge' => null],
     ['label' => 'Users & Roles', 'route' => 'users.roles', 'icon' => 'user', 'badge' => null],
 ];
+
+$socAnalystRoutes = ['dashboard', 'incidents.index', 'alerts.index', 'cloudflare.index', 'audit-logs.index', 'reports.index'];
+$clientDashboardUrl = route('client.dashboard');
+$clientItems = [
+    ['label' => 'Dashboard', 'route' => 'client.dashboard', 'icon' => 'grid', 'badge' => null],
+    ['label' => 'Projects / Sites', 'route' => 'client.projects', 'icon' => 'folder', 'badge' => null],
+    ['label' => 'Incidents', 'route' => 'client.incidents', 'icon' => 'alert', 'badge' => $openIncidentsCount, 'badgeColor' => 'red'],
+    ['label' => 'Alerts', 'route' => 'client.alerts', 'icon' => 'bell', 'badge' => $openAlertsCount, 'badgeColor' => 'yellow'],
+    ['label' => 'Reports', 'route' => 'client.reports.index', 'icon' => 'file', 'badge' => null],
+    ['label' => 'Settings', 'route' => 'settings.index', 'icon' => 'user', 'badge' => null],
+];
+
+$filteredItems = $isClient ? $clientItems : [];
+$pendingSection = null;
+
+foreach ($isClient ? [] : $items as $item) {
+    if (isset($item['section'])) {
+        $pendingSection = $item;
+        continue;
+    }
+
+    if ($isSocAnalyst && ! in_array($item['route'], $socAnalystRoutes, true)) {
+        continue;
+    }
+
+    if ($pendingSection) {
+        $filteredItems[] = $pendingSection;
+        $pendingSection = null;
+    }
+
+    $filteredItems[] = $item;
+}
+
+$items = $filteredItems;
 @endphp
 
 <aside class="sticky top-0 h-screen w-64 shrink-0 overflow-hidden bg-white border-r border-cyan-100 flex flex-col text-slate-700 shadow-xl shadow-slate-200/50 dark:bg-[#020617] dark:border-cyan-500/10 dark:text-slate-300 dark:shadow-none">
@@ -56,9 +118,10 @@ $items = [
                 </p>
             @else
                 @php
-                    $routePattern = $item['route'] . '*';
-                    $isActive = request()->routeIs($routePattern);
-                    $href = Route::has($item['route']) ? route($item['route']) : '#';
+                    $routeName = $item['route'] ?? null;
+                    $routePattern = $routeName ? $routeName . '*' : null;
+                    $isActive = $routePattern ? request()->routeIs($routePattern) : false;
+                    $href = $item['href'] ?? ($routeName && Route::has($routeName) ? route($routeName) : '#');
                 @endphp
 
                 <a href="{{ $href }}"
@@ -162,13 +225,13 @@ $items = [
                         </span>
                     </span>
 
-                    @if($item['badge'])
+                    @if(array_key_exists('badge', $item) && $item['badge'] !== null)
                         <span class="flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ring-1 ring-inset
                             {{ ($item['badgeColor'] ?? '') === 'red'
                                 ? 'bg-red-500/10 text-red-400 ring-red-500/30'
                                 : 'bg-amber-500/10 text-amber-400 ring-amber-500/30'
                             }}">
-                            {{ $item['badge'] }}
+                            {{ $item['badge'] > 99 ? '99+' : $item['badge'] }}
                         </span>
                     @endif
                 </a>

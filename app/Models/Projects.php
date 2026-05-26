@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Models;
-
+use App\Models\Alert;
+use App\Models\Incident;
 use Illuminate\Database\Eloquent\Model;
 
 class Projects extends Model
@@ -23,7 +24,33 @@ class Projects extends Model
         'is_connected',
         'connected_at',
         'last_seen_at',
+        'cloudflare_enabled',
+        'cloudflare_account_email',
+        'cloudflare_account_id',
+        'cloudflare_zone_id',
+        'cloudflare_api_token',
+        'cloudflare_settings',
+        'cloudflare_connected_at',
+        'cloudflare_nameservers',
+'cloudflare_status',
     ];
+
+    protected $hidden = [
+        'cloudflare_api_token',
+        'cloudflare_nameservers' => 'array',
+    ];
+
+    protected $casts = [
+    'is_connected' => 'boolean',
+    'connected_at' => 'datetime',
+    'last_seen_at' => 'datetime',
+    'cloudflare_enabled' => 'boolean',
+    'cloudflare_api_token' => 'encrypted',
+    'cloudflare_settings' => 'array',
+    'cloudflare_nameservers' => 'array',
+    'cloudflare_connected_at' => 'datetime',
+    'cloudflare_status' => 'string',
+];
 
     public function client()
     {
@@ -31,14 +58,14 @@ class Projects extends Model
     }
 
     public function alerts()
-    {
-        return $this->hasMany(alerts::class, 'project_id');
-    }
+{
+    return $this->hasMany(Alert::class, 'project_id');
+}
 
-    public function incidents()
-    {
-        return $this->hasMany(incidents::class, 'project_id');
-    }
+public function incidents()
+{
+    return $this->hasMany(Incident::class, 'project_id');
+}
 
     public function agents()
     {

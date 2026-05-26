@@ -50,6 +50,15 @@ class LoginRequest extends FormRequest
         ]);
     }
 
+    if (strtolower(trim((string) Auth::user()?->status)) !== 'active') {
+        Auth::guard('web')->logout();
+        RateLimiter::hit($this->throttleKey(), 300);
+
+        throw ValidationException::withMessages([
+            'email' => 'Your account is not active yet.',
+        ]);
+    }
+
     RateLimiter::clear($this->throttleKey());
     Auth::user()->update([
     'last_login_at' => now(),

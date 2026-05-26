@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\clients;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -28,6 +29,31 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_client_user_is_redirected_to_client_dashboard_after_login(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'Client',
+            'status' => 'active',
+        ]);
+
+        $client = clients::create([
+            'user_id' => $user->id,
+            'company_name' => 'Acme Security',
+            'email' => $user->email,
+            'phone' => null,
+            'address' => null,
+            'status' => 'active',
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('client.dashboard'));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

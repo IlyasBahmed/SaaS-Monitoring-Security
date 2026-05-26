@@ -15,6 +15,19 @@
             ];
         };
 
+        $projectPaginationPages = method_exists($projects, 'lastPage') ? $projects->lastPage() : 1;
+        $projectPaginationCurrent = method_exists($projects, 'currentPage') ? $projects->currentPage() : 1;
+        $projectPaginationStart = max(1, $projectPaginationCurrent - 1);
+        $projectPaginationEnd = min($projectPaginationPages, $projectPaginationCurrent + 1);
+
+        if ($projectPaginationCurrent <= 2) {
+            $projectPaginationEnd = min($projectPaginationPages, 3);
+        }
+
+        if ($projectPaginationCurrent >= $projectPaginationPages - 1) {
+            $projectPaginationStart = max(1, $projectPaginationPages - 2);
+        }
+
         $projectFilterItems = $projects
             ->map(function ($project) use ($resolveProjectType) {
                 $type = $resolveProjectType($project)['label'];
@@ -91,9 +104,9 @@
             </div>
 
             <div class="flex gap-2">
-                <button type="button" class="h-9 px-4 text-xs border border-slate-700 text-slate-400 rounded-lg hover:text-cyan-300 hover:border-cyan-400/30 transition">
+                <a href="{{ route('projects.export') }}" class="inline-flex h-9 items-center px-4 text-xs border border-slate-700 text-slate-400 rounded-lg hover:text-cyan-300 hover:border-cyan-400/30 transition">
                     Export
-                </button>
+                </a>
 
                 <a href="{{ route('projects.create') }}" class="h-9 px-4 inline-flex items-center text-xs border border-cyan-400/30 bg-cyan-400/10 text-cyan-300 rounded-lg hover:bg-cyan-400/20 transition">
                     + Add Project
@@ -192,18 +205,34 @@
                             });
 
                             $warning = strtolower($project->status ?? '') === 'warning';
-                            $stack = strtolower($project->stack ?? '');
-                            $cloudflare = str_contains($stack, 'cloudflare');
-
-                            $score = 45;
-                            $score += $agentOnline ? 35 : 0;
-                            $score += $project->domain ? 10 : 0;
-                            $score += $cloudflare ? 10 : 0;
-                            $score -= $warning ? 8 : 0;
-                            $score -= (!$agentOnline && !$warning) ? 7 : 0;
-                            $score = max(25, min(99, $score));
-
-                            $scoreLabel = $score >= 85 ? 'Healthy' : ($score >= 65 ? 'Review' : 'Risk');
+                            $cloudflare = (bool) ($project->cloudflare_enabled ?? false) || filled($project->cloudflare_zone_id ?? null);
+                            $cloudflareSettings = is_array($project->cloudflare_settings ?? null) ? $project->cloudflare_settings : [];
+                            $sslMode = $cloudflareSettings['ssl_mode'] ?? null;
+                            $sslLabel = $cloudflare
+                                ? match ($sslMode) {
+                                    'full_strict' => 'Full Strict',
+                                    'full' => 'Full',
+                                    'flexible' => 'Flexible',
+                                    'off' => 'Off',
+                                    default => 'Not synced',
+                                }
+                                : 'Not linked';
+                            $sslState = match ($sslMode) {
+                                'full_strict', 'full' => 'Valid',
+                                'flexible' => 'Weak',
+                                'off' => 'Invalid',
+                                default => $cloudflare ? 'Unknown' : 'Missing',
+                            };
+                            $sslClass = match ($sslState) {
+                                'Valid' => 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300',
+                                'Weak' => 'border-amber-400/25 bg-amber-400/10 text-amber-300',
+                                default => 'border-red-400/25 bg-red-400/10 text-red-300',
+                            };
+                            $score = (int) ($project->security_score ?? 0);
+                            $scoreLabel = $project->security_score_label ?? ($score >= 85 ? 'Healthy' : ($score >= 65 ? 'Review' : 'Risk'));
+                            $scoreSource = ($project->security_score_source ?? 'live_findings') === 'health_report'
+                                ? 'Health report'
+                                : 'Live findings';
                             $scoreText = $score >= 85 ? 'text-emerald-300' : ($score >= 65 ? 'text-amber-300' : 'text-red-300');
                             $scoreRing = $score >= 85 ? 'ring-emerald-400/20' : ($score >= 65 ? 'ring-amber-400/20' : 'ring-red-400/20');
 
@@ -276,15 +305,16 @@
 
                                     <div>
                                         <p class="text-xs font-black {{ $scoreText }}">{{ $scoreLabel }}</p>
-                                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">Security score</p>
+                                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">{{ $scoreSource }}</p>
                                     </div>
                                 </div>
                             </td>
 
                             {{-- SSL --}}
                             <td class="px-4 py-4">
-                                <span class="text-xs font-bold {{ $project->domain ? 'text-emerald-400' : 'text-red-400' }}">
-                                    {{ $project->domain ? 'Valid' : 'Missing' }}
+                                <span class="inline-flex flex-col rounded-lg border px-2.5 py-1 {{ $sslClass }}">
+                                    <span class="text-xs font-black">{{ $sslState }}</span>
+                                    <span class="text-[10px] font-semibold opacity-75">{{ $sslLabel }}</span>
                                 </span>
                             </td>
 
@@ -362,9 +392,86 @@
                     @endif
                 </tbody>
             </table>
-        </div>
 
-        {{-- PAGINATION --}}
-        <x-pagination :paginator="$projects" />
+            @if(method_exists($projects, 'total') && $projects->total() > 0)
+                <div class="flex flex-col gap-3 border-t border-slate-800 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-xs font-semibold text-slate-500">
+                        Showing
+                        <span class="font-black text-slate-300">{{ $projects->firstItem() }}</span>
+                        to
+                        <span class="font-black text-slate-300">{{ $projects->lastItem() }}</span>
+                        of
+                        <span class="font-black text-slate-300">{{ $projects->total() }}</span>
+                        projects
+                    </p>
+
+                    @if($projects->hasPages())
+                        <div class="flex flex-wrap items-center gap-2">
+                            @if($projects->onFirstPage())
+                                <button
+                                    type="button"
+                                    disabled
+                                    class="inline-flex h-9 items-center rounded-lg border border-slate-800 px-3 text-xs font-bold text-slate-700"
+                                >
+                                    Previous
+                                </button>
+                            @else
+                                <a
+                                    href="{{ $projects->previousPageUrl() }}"
+                                    class="inline-flex h-9 items-center rounded-lg border border-slate-800 px-3 text-xs font-bold text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300"
+                                >
+                                    Previous
+                                </a>
+                            @endif
+
+                            @if($projectPaginationStart > 1)
+                                <a href="{{ $projects->url(1) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-xs font-bold text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300">1</a>
+                                @if($projectPaginationStart > 2)
+                                    <span class="px-1 text-xs font-bold text-slate-600">...</span>
+                                @endif
+                            @endif
+
+                            @for($page = $projectPaginationStart; $page <= $projectPaginationEnd; $page++)
+                                @if($page === $projectPaginationCurrent)
+                                    <button
+                                        type="button"
+                                        disabled
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-400/10 text-xs font-black text-cyan-300"
+                                    >
+                                        {{ $page }}
+                                    </button>
+                                @else
+                                    <a href="{{ $projects->url($page) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-xs font-bold text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300">{{ $page }}</a>
+                                @endif
+                            @endfor
+
+                            @if($projectPaginationEnd < $projectPaginationPages)
+                                @if($projectPaginationEnd < $projectPaginationPages - 1)
+                                    <span class="px-1 text-xs font-bold text-slate-600">...</span>
+                                @endif
+                                <a href="{{ $projects->url($projectPaginationPages) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-xs font-bold text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300">{{ $projectPaginationPages }}</a>
+                            @endif
+
+                            @if($projects->hasMorePages())
+                                <a
+                                    href="{{ $projects->nextPageUrl() }}"
+                                    class="inline-flex h-9 items-center rounded-lg border border-slate-800 px-3 text-xs font-bold text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300"
+                                >
+                                    Next
+                                </a>
+                            @else
+                                <button
+                                    type="button"
+                                    disabled
+                                    class="inline-flex h-9 items-center rounded-lg border border-slate-800 px-3 text-xs font-bold text-slate-700"
+                                >
+                                    Next
+                                </button>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </div>
     </div>
 </x-dashboard-layout>

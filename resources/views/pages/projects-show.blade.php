@@ -4,9 +4,22 @@
         $isActive = $status === 'active';
         $isWarning = $status === 'warning';
         $stack = \App\Models\Projects::normalizeProjectType($project->stack ?? '');
-        $stackSource = strtolower((string) $project->stack);
-        $cloudflareLinked = str_contains($stackSource, 'cloudflare');
-        $sslValid = filled($project->domain);
+        $cloudflareLinked = (bool) ($project->cloudflare_enabled ?? false) || filled($project->cloudflare_zone_id ?? null);
+        $cloudflareSettings = is_array($project->cloudflare_settings ?? null) ? $project->cloudflare_settings : [];
+        $sslMode = $cloudflareSettings['ssl_mode'] ?? null;
+        $sslValid = $cloudflareLinked && in_array($sslMode, ['full', 'full_strict'], true);
+        $sslLabel = $cloudflareLinked
+            ? match ($sslMode) {
+                'full_strict' => 'Full Strict',
+                'full' => 'Full',
+                'flexible' => 'Flexible',
+                'off' => 'Off',
+                default => 'Not synced',
+            }
+            : 'Not linked';
+        $sslClass = $sslValid
+            ? 'text-emerald-300'
+            : (($cloudflareLinked && $sslMode === 'flexible') ? 'text-amber-300' : 'text-red-300');
 
         $lastSeenValue = $project->agent_last_seen_at ?? $project->last_seen_at ?? null;
         $lastSeenAt = $lastSeenValue ? \Illuminate\Support\Carbon::parse($lastSeenValue) : null;
@@ -15,16 +28,11 @@
         $connectedAt = $project->connected_at ? \Illuminate\Support\Carbon::parse($project->connected_at) : null;
         $agent = $project->agents->first();
 
-        $score = 45;
-        $score += $isActive ? 20 : 0;
-        $score += $agentOnline ? 15 : 0;
-        $score += $project->domain ? 10 : 0;
-        $score += $cloudflareLinked ? 10 : 0;
-        $score -= $isWarning ? 8 : 0;
-        $score -= (! $isActive && ! $isWarning) ? 7 : 0;
-        $score = max(25, min(99, $score));
-
-        $scoreLabel = $score >= 85 ? 'Healthy' : ($score >= 65 ? 'Review' : 'Risk');
+        $score = (int) ($projectScore['security_score'] ?? 0);
+        $scoreLabel = $projectScore['score_label'] ?? ($score >= 85 ? 'Healthy' : ($score >= 65 ? 'Review' : 'Risk'));
+        $scoreSource = ($projectScore['source'] ?? 'live_findings') === 'health_report'
+            ? 'From latest health report'
+            : 'From live findings';
         $scoreText = $score >= 85 ? 'text-emerald-300' : ($score >= 65 ? 'text-amber-300' : 'text-red-300');
         $scoreRing = $score >= 85 ? 'ring-emerald-400/20' : ($score >= 65 ? 'ring-amber-400/20' : 'ring-red-400/20');
         $statusClass = $isActive ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300' : ($isWarning ? 'border-yellow-400/20 bg-yellow-400/10 text-yellow-300' : 'border-red-400/20 bg-red-400/10 text-red-300');
@@ -177,7 +185,7 @@
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Security Score</p>
                         <p class="mt-1 text-base font-black {{ $scoreText }}">{{ $scoreLabel }}</p>
-                        <p class="text-xs font-medium text-slate-600">Current risk level</p>
+                        <p class="text-xs font-medium text-slate-600">{{ $scoreSource }}</p>
                     </div>
                 </div>
             </section>
@@ -233,7 +241,7 @@
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#07111f] px-4 py-3.5">
                     <p class="text-xs font-bold text-slate-500">SSL</p>
-                    <p class="text-sm font-black {{ $sslValid ? 'text-emerald-300' : 'text-red-300' }}">{{ $sslValid ? 'Valid' : 'Invalid' }}</p>
+                    <p class="text-sm font-black {{ $sslClass }}">{{ $sslLabel }}</p>
                 </div>
                 <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#07111f] px-4 py-3.5">
                     <p class="text-xs font-bold text-slate-500">Cloudflare</p>

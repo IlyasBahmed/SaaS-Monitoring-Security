@@ -25,7 +25,10 @@ class ClientPasswordSetupNotification extends Notification
             ->subject('Define your CyberShield password')
             ->view('emails.client-password-setup', [
                 'clientName' => $notifiable->name,
-                'setupUrl' => url('/reset-password/'.$this->token.'?email='.$notifiable->email),
+                'setupUrl' => route('password.reset', [
+                    'token' => $this->token,
+                    'email' => $notifiable->email,
+                ]),
             ]);
     }
 }

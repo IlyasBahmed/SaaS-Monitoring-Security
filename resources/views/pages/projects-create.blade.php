@@ -93,21 +93,11 @@
     @enderror
 </div>
 
-            {{-- STATUS --}}
-            <div>
-                <label class="text-xs text-slate-400 font-bold">Initial Status</label>
-                <select name="status"
-                    class="mt-2 w-full h-11 px-4 bg-[#07111f] border border-slate-700 rounded-xl text-slate-300 text-sm outline-none focus:border-cyan-400/40">
-                    <option value="offline" @selected(old('status', 'offline') === 'offline')>Offline</option>
-                    <option value="active" @selected(old('status') === 'active')>Active</option>
-                    <option value="warning" @selected(old('status') === 'warning')>Warning</option>
-                </select>
-            </div>
 
         </div>
 
         {{-- INFO BOX --}}
-        <div class="rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-4 text-sm text-cyan-300">
+        <div class="flex gap-3 rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-4 text-sm text-cyan-300">
             ⚡ An API Key will be automatically generated for this project after creation.
         </div>
 

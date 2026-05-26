@@ -11,42 +11,31 @@ return new class extends Migration
      */
     public function up(): void
     {
-     Schema::create('projects', function (Blueprint $table) {
+      Schema::create('projects', function (Blueprint $table) {
     $table->id();
 
     $table->foreignId('client_id')->constrained()->cascadeOnDelete();
 
     // BASIC INFO
     $table->string('name')->nullable();
-
-    $table->string('domain')
-        ->nullable()
-        ->index();
-
+    $table->string('domain')->nullable();
     $table->string('ip_address')->nullable();
     $table->string('stack')->nullable();
 
-    // SECURITY
-    $table->string('api_key_prefix')
-        ->nullable()
-        ->index();
+    // 🔐 SECURITY (مهم)
+    $table->string('api_key')->unique()->nullable(); // key اللي كيدخل ف plugin
+    $table->string('api_key_hash')->nullable(); // optional secure
 
-    $table->text('api_key_hash')->nullable();
-
-    // CONNECTION
+    // 🔗 CONNECTION
     $table->boolean('is_connected')->default(false);
-
     $table->timestamp('connected_at')->nullable();
     $table->timestamp('last_seen_at')->nullable();
 
     // STATUS
-    $table->string('status')
-        ->default('pending')
-        ->index();
+    $table->string('status')->default('offline');
 
     $table->timestamps();
 });
-
     }
 
     /**

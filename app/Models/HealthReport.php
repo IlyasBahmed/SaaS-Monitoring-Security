@@ -28,4 +28,8 @@ class HealthReport extends Model
         'metadata' => 'array',
         'event_created_at' => 'datetime',
     ];
+    public function project()
+{
+    return $this->belongsTo(\App\Models\Projects::class, 'project_id', 'id');
+}
 }
