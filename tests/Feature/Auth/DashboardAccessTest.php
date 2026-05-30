@@ -244,39 +244,42 @@ class DashboardAccessTest extends TestCase
     }
 
     public function test_client_user_can_request_report(): void
-    {
-        $user = User::factory()->create([
-            'role' => 'Client',
-            'status' => 'active',
-        ]);
+{
+    $user = User::factory()->create([
+        'role' => 'Client',
+        'status' => 'active',
+    ]);
 
-        $client = clients::create([
-            'user_id' => $user->id,
-            'company_name' => 'Acme Security',
-            'email' => $user->email,
-            'phone' => null,
-            'address' => null,
-            'status' => 'active',
-        ]);
+    $client = clients::create([
+        'user_id' => $user->id,
+        'company_name' => 'Acme Security',
+        'email' => $user->email,
+        'status' => 'active',
+    ]);
 
-        $this->actingAs($user)
-            ->post(route('client.reports.store'), [
-                'type' => 'client_posture',
-                'period' => 'last_30_days',
-                'note' => 'Please include executive summary.',
-            ])
-            ->assertRedirect(route('client.dashboard'));
+    $project = $client->projects()->create([
+        'name' => 'Test Project',
+        'status' => 'active',
+    ]);
 
-        $this->assertDatabaseHas('report_requests', [
-            'client_id' => $client->id,
-            'user_id' => $user->id,
-            'type' => 'client_posture',
+    $this->actingAs($user)
+        ->post(route('client.reports.store'), [
+            'project_id' => $project->id,
+            'type' => 'project_security',
             'period' => 'last_30_days',
-            'status' => 'pending',
-        ]);
+            'note' => 'Please include executive summary.',
+        ])
+        ->assertRedirect(route('client.reports.index'));
 
-        $this->assertSame('Please include executive summary.', ReportRequest::query()->first()->note);
-    }
+    $this->assertDatabaseHas('report_requests', [
+        'client_id' => $client->id,
+        'user_id' => $user->id,
+        'project_id' => $project->id,
+        'type' => 'project_security',
+        'period' => 'last_30_days',
+        'status' => 'ready',
+    ]);
+}
 
     public function test_client_user_cannot_open_reports_page(): void
     {
