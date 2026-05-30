@@ -49,3 +49,6 @@ jobs:
 
       - name: Run PHPUnit
         run: php artisan test
+
+      - name: Check Laravel
+        run: php artisan about 
