@@ -260,7 +260,7 @@ class DashboardAccessTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('client.report-requests.store'), [
+            ->post(route('client.reports.store'), [
                 'type' => 'client_posture',
                 'period' => 'last_30_days',
                 'note' => 'Please include executive summary.',
