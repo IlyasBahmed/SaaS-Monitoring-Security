@@ -157,7 +157,7 @@ class GlobalReportController extends Controller
     private function savePdf(string $html, string $pdfPath): void
     {
         try {
-            $chromePath = env('BROWSERSHOT_CHROME_PATH', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
+            $chromePath = config('services.browsershot.chrome_path', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
             $browserShot = Browsershot::html($html)
                 ->showBackground()
                 ->format('A4')

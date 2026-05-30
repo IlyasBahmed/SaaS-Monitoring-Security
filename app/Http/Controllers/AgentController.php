@@ -88,7 +88,7 @@ class AgentController extends Controller
             'version'      => $request->plugin_version ?? '1.0.0',
             'status'       => 'online',
             'api_key'      => $agentKey,
-            'connected_at' => $installation?->connected_at ?? now(),
+            'connected_at' => $installation->connected_at ?? now(),
             'last_seen_at' => now(),
         ]
     );

@@ -13,19 +13,26 @@ class CloudflareController extends Controller
         Projects $project,
         CloudflareService $cloudflare
     ) {
-
         $request->validate([
             'action' => 'required|string',
         ]);
 
+        $cloudflare = $cloudflare->withToken(
+            $project->cloudflare_api_token
+        );
+
         switch ($request->action) {
 
             case 'purge_cache':
-                $result = $cloudflare->purgeCache($project);
+                $result = $cloudflare->purgeEverything(
+                    $project->cloudflare_zone_id
+                );
                 break;
 
             case 'under_attack':
-                $result = $cloudflare->enableUnderAttack($project);
+                $result = $cloudflare->enableUnderAttack(
+                    $project->cloudflare_zone_id
+                );
 
                 $project->update([
                     'under_attack_mode' => true,
@@ -33,7 +40,9 @@ class CloudflareController extends Controller
                 break;
 
             case 'disable_under_attack':
-                $result = $cloudflare->disableUnderAttack($project);
+                $result = $cloudflare->disableUnderAttack(
+                    $project->cloudflare_zone_id
+                );
 
                 $project->update([
                     'under_attack_mode' => false,
@@ -48,7 +57,7 @@ class CloudflareController extends Controller
         }
 
         return response()->json([
-            'success' => $result['success'] ?? false,
+            'success' => true,
             'data' => $result,
         ]);
     }

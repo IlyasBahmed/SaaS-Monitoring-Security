@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Client;
+use App\Models\clients;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
     public function index()
     {
-        $clients = Client::latest()->get();
+        $clients = clients::latest()->get();
         return view('clients.index', compact('clients'));
     }
 
@@ -29,7 +29,7 @@ class ClientController extends Controller
 
     $data['user_id'] = auth()->id();
 
-    Client::create($data);
+    clients::create($data);
 
     return redirect()->route('clients.index')
         ->with('success', 'Client created successfully');

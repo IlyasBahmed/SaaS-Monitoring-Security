@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Agent;
+use App\Models\agents;
 use App\Models\Projects;
 use App\Models\ProjectAgent;
 use Illuminate\Http\Request;
@@ -27,7 +27,7 @@ class AgentConnectionController extends Controller
             ], 401);
         }
 
-        $agent = Agent::where('slug', $data['agent_slug'])
+        $agent = agent::where('slug', $data['agent_slug'])
             ->where('status', 'active')
             ->first();
 

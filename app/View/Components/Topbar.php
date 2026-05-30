@@ -26,12 +26,12 @@ class Topbar extends Component
     public function render(): View|Closure|string
     {
         $user = auth()->user();
-        $isClient = strtolower(trim((string) ($user?->role ?? ''))) === 'client';
+        $isClient = $user !== null && strtolower(trim((string) $user->role)) === 'client';
         $clientProjectIds = null;
 
         if ($isClient) {
             $client = clients::query()
-                ->where('user_id', $user?->id)
+                ->where('user_id', $user->id)
                 ->first();
 
             $clientProjectIds = $client

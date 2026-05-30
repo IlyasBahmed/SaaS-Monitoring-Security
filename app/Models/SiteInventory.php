@@ -4,6 +4,10 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
+/**
+ * @property array|null $plugins
+ * @property string|null $site_url
+ */
 class SiteInventory extends Model
 {
     protected $connection = 'mongodb';

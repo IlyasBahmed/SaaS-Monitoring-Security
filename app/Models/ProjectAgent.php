@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read agents|null $agent
+ * @property-read Projects|null $project
+ */
 class ProjectAgent extends Model
 {
     protected $table = 'project_agents';
@@ -30,11 +34,17 @@ class ProjectAgent extends Model
         'meta' => 'array',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function agent()
     {
         return $this->belongsTo(agents::class, 'agent_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function project()
     {
         return $this->belongsTo(Projects::class, 'project_id');

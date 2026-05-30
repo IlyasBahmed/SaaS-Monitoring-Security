@@ -4,6 +4,14 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
+/**
+ * @property string|null $event
+ * @property string|null $category
+ * @property string|null $severity
+ * @property string|null $ip
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $event_created_at
+ */
 class AuditLog extends Model
 {
     protected $connection = 'mongodb';

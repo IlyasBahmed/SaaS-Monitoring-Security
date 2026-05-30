@@ -4,6 +4,10 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
+/**
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $event_created_at
+ */
 class Incident extends Model
 {
     protected $connection = 'mongodb';

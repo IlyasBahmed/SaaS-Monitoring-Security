@@ -1,10 +1,22 @@
 <?php
 
 namespace App\Models;
-use App\Models\Alert;
-use App\Models\Incident;
+
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read clients|null $client
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, agents> $agents
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Alert> $alerts
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Incident> $incidents
+ * @property float|null $soc_score
+ * @property float|null $soc_risk_score
+ * @property string|null $soc_risk
+ * @property string|null $soc_score_source
+ * @property int|null $alerts_count
+ * @property int|null $incidents_count
+ * @property int|null $vulnerabilities_count
+ */
 class Projects extends Model
 {
     public const PROJECT_TYPES = [
@@ -37,7 +49,7 @@ class Projects extends Model
 
     protected $hidden = [
         'cloudflare_api_token',
-        'cloudflare_nameservers' => 'array',
+        'cloudflare_nameservers',
     ];
 
     protected $casts = [
@@ -52,21 +64,33 @@ class Projects extends Model
     'cloudflare_status' => 'string',
 ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function client()
     {
         return $this->belongsTo(clients::class, 'client_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function alerts()
-{
-    return $this->hasMany(Alert::class, 'project_id');
-}
+    {
+        return $this->hasMany(Alert::class, 'project_id');
+    }
 
-public function incidents()
-{
-    return $this->hasMany(Incident::class, 'project_id');
-}
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function incidents()
+    {
+        return $this->hasMany(Incident::class, 'project_id');
+    }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function agents()
     {
         return $this->belongsToMany(agents::class, 'project_agents', 'project_id', 'agent_id')
