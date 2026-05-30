@@ -16,25 +16,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22'
 
       - name: Install Composer Dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Install NPM Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Frontend Assets
         run: npm run build
@@ -44,11 +45,24 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
+      - name: Create SQLite Database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Configure Environment
+        run: |
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
+
+      - name: Run Migrations
+        run: php artisan migrate --force
+
+      - name: Laravel Info
+        run: php artisan about
+
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse
+        run: vendor/bin/phpstan analyse --memory-limit=1G
 
       - name: Run PHPUnit
-        run: php artisan test
-
-      - name: Check Laravel
-        run: php artisan about 
+        run: php artisan test -v
