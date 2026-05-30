@@ -1,0 +1,34 @@
+# Node
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# Tests
+tests
+phpunit.xml
+
+# Dev tools
+.github
+ansible
+terraform
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Storage (runtime data)
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Vendor (composer يبنيها)
+vendor
+
+# Build artifacts
+public/build
+public/hot

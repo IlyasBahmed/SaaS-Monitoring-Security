@@ -966,6 +966,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     })->name('agents.index');
 
     Route::post('/agents/{installation}/restart', function (ProjectAgent $installation) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to restart this agent.');
+        }
+
         $installation->update([
             'status' => 'online',
             'last_seen_at' => now(),
@@ -990,6 +996,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     })->name('agents.restart');
 
     Route::post('/agents/{installation}/off', function (ProjectAgent $installation) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to disconnect this agent.');
+        }
+
         $project = $installation->project;
 
         $installation->update([
@@ -1013,6 +1025,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     })->name('agents.off');
 
     Route::delete('/agents/{installation}', function (ProjectAgent $installation) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to delete this agent.');
+        }
+
         $installation->delete();
 
         return redirect()
@@ -1035,6 +1053,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     })->name('projects.create');
 
     Route::get('/projects/{project}/edit', function (Projects $project) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized access to this project.');
+        }
+
         $clients = clients::query()
             ->orderBy('company_name')
             ->get();
@@ -1047,6 +1071,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         ->name('projects.store');
 
     Route::put('/projects/{project}', function (Projects $project) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to update this project.');
+        }
+
         $validated = request()->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -1064,6 +1094,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     })->name('projects.update');
 
     Route::delete('/projects/{project}', function (Projects $project) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to delete this project.');
+        }
+
         $project->delete();
 
         return redirect()
@@ -1072,6 +1108,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     })->name('projects.destroy');
 
     Route::get('/projects/{project}', function (Projects $project) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to view this project.');
+        }
+
         $project->load(['client', 'agents']);
         $projectId = (int) $project->id;
         $alerts = collect(rescue(fn () => Alert::query()->where('project_id', $projectId)->get(), collect(), false));
@@ -1084,6 +1126,12 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     })->name('projects.show');
 
     Route::get('/projects/{project}/realtime', function (Projects $project) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to view project data.');
+        }
+
         $lastSeen = $project->agent_last_seen_at ?? $project->last_seen_at;
         $lastSeenAt = $lastSeen
             ? Carbon::parse($lastSeen)
@@ -1104,10 +1152,10 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         ]);
     });
 
-    Route::get('/test-scan/{project}', [ProjectSecurityController::class, 'runVulnerabilityScan']);
+    Route::get('/test-scan/{project}', [ProjectSecurityController::class, 'runVulnerabilityScan'])->middleware('auth');
 
     Route::post('/projects/{project}/vulnerability-scan', [ProjectSecurityController::class, 'runVulnerabilityScan'])
-        ->name('projects.vulnerability.scan');
+        ->name('projects.vulnerability.scan')->middleware('auth');
 
     /*
     |--------------------------------------------------------------------------

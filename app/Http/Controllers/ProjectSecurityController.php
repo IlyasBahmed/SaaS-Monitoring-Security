@@ -12,6 +12,12 @@ class ProjectSecurityController extends Controller
         Projects $project,
         VulnerabilityScanner $scanner
     ) {
+        // IDOR Protection: Verify user is admin/staff
+        $user = request()->user();
+        if (! $user || ! in_array($user->role ?? '', ['admin', 'staff', 'soc_analyst'], true)) {
+            abort(403, 'Unauthorized to scan this project.');
+        }
+
         try {
 
             $result = $scanner->scan($project);
