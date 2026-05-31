@@ -1,0 +1,52 @@
+---
+
+- hosts: web
+  become: yes
+
+  tasks:
+
+  - name: Update packages
+    apt:
+      update_cache: yes
+      upgrade: dist
+
+  - name: Install required packages
+    apt:
+      name:
+        - docker.io
+        - docker-compose
+        - git
+        - nginx
+        - fail2ban
+      state: present
+
+  - name: Enable Docker
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: Enable Nginx
+    service:
+      name: nginx
+      state: started
+      enabled: yes
+
+  - name: Enable Fail2ban
+    service:
+      name: fail2ban
+      state: started
+      enabled: yes
+
+  - name: Add azureuser to docker group
+    user:
+      name: azureuser
+      groups: docker
+      append: yes
+
+  - name: Clone project repository
+    git:
+      repo: https://github.com/IlyasBahmed/SaaS-Monitoring-Security.git
+      dest: /opt/project
+      version: main
+      force: yes

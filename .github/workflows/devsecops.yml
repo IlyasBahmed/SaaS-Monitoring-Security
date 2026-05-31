@@ -140,27 +140,20 @@ jobs:
           format: table
           exit-code: 1
           severity: CRITICAL,HIGH
-  terraform:
+  
+  deploy:
     needs: container-security
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform -chdir=terraform init
-
-      - name: Terraform Format Check
-        run: terraform -chdir=terraform fmt -check
-
-      - name: Terraform Validate
-        run: terraform -chdir=terraform validate
-
-      - name: Terraform Plan
-        run: terraform -chdir=terraform plan
-
-
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: azureuser
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/project
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
