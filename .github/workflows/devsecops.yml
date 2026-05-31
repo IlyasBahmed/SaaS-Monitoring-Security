@@ -1,19 +1,22 @@
 name: DevSecOps Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - develop
+push:
+branches:
+- main
+- develop
 
-  pull_request:
-    branches:
-      - main
-      - develop
+pull_request:
+branches:
+- main
+- develop
 
 jobs:
+
 quality:
 runs-on: ubuntu-latest
+
+
 steps:
   - name: Checkout Code
     uses: actions/checkout@v4
@@ -90,10 +93,13 @@ steps:
     with:
       name: node_modules
       path: node_modules
+
+
 security:
 needs: quality
 runs-on: ubuntu-latest
 
+```
 steps:
   - name: Checkout Code
     uses: actions/checkout@v4
@@ -101,22 +107,23 @@ steps:
   - name: Download Vendor Artifact
     uses: actions/download-artifact@v4
     with:
-    name: vendor
-    path: vendor
+      name: vendor
+      path: vendor
 
   - name: Download Node Modules Artifact
     uses: actions/download-artifact@v4
     with:
-    name: node_modules
-    path: node_modules
+      name: node_modules
+      path: node_modules
 
   - name: Setup PHP
     uses: shivammathur/setup-php@v2
     with:
-    php-version: '8.3'
+      php-version: '8.3'
 
   - name: Run Composer Audit
     run: composer audit
 
   - name: Run Gitleaks
     uses: gitleaks/gitleaks-action@v2
+
