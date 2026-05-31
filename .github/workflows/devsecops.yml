@@ -93,30 +93,30 @@ steps:
 security:
 needs: quality
 runs-on: ubuntu-latest
+
 steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      - name: Download Vendor Artifact
-      uses: actions/download-artifact@v4
-      with:
-      name: vendor
-      path: vendor
+  - name: Checkout Code
+    uses: actions/checkout@v4
 
-    - name: Download Node Modules Artifact
-      uses: actions/download-artifact@v4
-      with:
-      name: node_modules
-      path: node_modules
+  - name: Download Vendor Artifact
+    uses: actions/download-artifact@v4
+    with:
+    name: vendor
+    path: vendor
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-      php-version: '8.3'
+  - name: Download Node Modules Artifact
+    uses: actions/download-artifact@v4
+    with:
+    name: node_modules
+    path: node_modules
 
-    - name: Run Composer Audit
-      run: composer audit
+  - name: Setup PHP
+    uses: shivammathur/setup-php@v2
+    with:
+    php-version: '8.3'
 
-    - name: Run Gitleaks
-      uses: gitleaks/gitleaks-action@v2
+  - name: Run Composer Audit
+    run: composer audit
 
- 
+  - name: Run Gitleaks
+    uses: gitleaks/gitleaks-action@v2
