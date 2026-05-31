@@ -1,129 +1,123 @@
 name: DevSecOps Pipeline
 
 on:
-push:
-branches:
-- main
-- develop
-
-pull_request:
-branches:
-- main
-- develop
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-quality:
-runs-on: ubuntu-latest
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-steps:
-  - name: Checkout Code
-    uses: actions/checkout@v4
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
 
-  - name: Setup PHP
-    uses: shivammathur/setup-php@v2
-    with:
-      php-version: '8.3'
-      extensions: mbstring, pdo, pdo_sqlite, sqlite3
-      coverage: none
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
 
-  - name: Setup Node
-    uses: actions/setup-node@v4
-    with:
-      node-version: '22'
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-  - name: Cache Composer Dependencies
-    uses: actions/cache@v4
-    with:
-      path: vendor
-      key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
-      restore-keys: |
-        composer-${{ runner.os }}-
+      - name: Install NPM Dependencies
+        run: npm ci
 
-  - name: Cache Node Modules
-    uses: actions/cache@v4
-    with:
-      path: node_modules
-      key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      restore-keys: |
-        npm-${{ runner.os }}-
+      - name: Build Frontend Assets
+        run: npm run build
 
-  - name: Install Composer Dependencies
-    run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Prepare Laravel
+        run: |
+          cp .env.example .env
+          php artisan key:generate
 
-  - name: Install NPM Dependencies
-    run: npm ci
+      - name: Create SQLite Database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
 
-  - name: Build Frontend Assets
-    run: npm run build
+      - name: Configure Environment
+        run: |
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
 
-  - name: Prepare Laravel
-    run: |
-      cp .env.example .env
-      php artisan key:generate
+      - name: Run Migrations
+        run: php artisan migrate --force
 
-  - name: Create SQLite Database
-    run: |
-      mkdir -p database
-      touch database/database.sqlite
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=1G
 
-  - name: Configure Environment
-    run: |
-      echo "DB_CONNECTION=sqlite" >> .env
-      echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
+      - name: Run PHPUnit
+        run: php artisan test
 
-  - name: Run Migrations
-    run: php artisan migrate --force
+      - name: Upload Vendor Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vendor
+          path: vendor
 
-  - name: Run PHPStan
-    run: vendor/bin/phpstan analyse --memory-limit=1G
-
-  - name: Run PHPUnit
-    run: php artisan test
-
-  - name: Upload Vendor Artifact
-    uses: actions/upload-artifact@v4
-    with:
-      name: vendor
-      path: vendor
-
-  - name: Upload Node Modules Artifact
-    uses: actions/upload-artifact@v4
-    with:
-      name: node_modules
-      path: node_modules
+      - name: Upload Node Modules Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node_modules
+          path: node_modules
 
 
-security:
-needs: quality
-runs-on: ubuntu-latest
+  security:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-```
-steps:
-  - name: Checkout Code
-    uses: actions/checkout@v4
+      - name: Download Vendor Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vendor
+          path: vendor
 
-  - name: Download Vendor Artifact
-    uses: actions/download-artifact@v4
-    with:
-      name: vendor
-      path: vendor
+      - name: Download Node Modules Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node_modules
+          path: node_modules
 
-  - name: Download Node Modules Artifact
-    uses: actions/download-artifact@v4
-    with:
-      name: node_modules
-      path: node_modules
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
 
-  - name: Setup PHP
-    uses: shivammathur/setup-php@v2
-    with:
-      php-version: '8.3'
+      - name: Run Composer Audit
+        run: composer audit
 
-  - name: Run Composer Audit
-    run: composer audit
-
-  - name: Run Gitleaks
-    uses: gitleaks/gitleaks-action@v2
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
 
