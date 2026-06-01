@@ -1,8 +1,157 @@
 <x-dashboard-layout>
+    @push('styles')
+        <style>
+            .audit-motion {
+                --audit-cyan: rgba(34, 211, 238, 0.16);
+                --audit-emerald: rgba(52, 211, 153, 0.13);
+                --audit-violet: rgba(129, 140, 248, 0.10);
+            }
+
+            .audit-motion::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                z-index: -10;
+                pointer-events: none;
+                background:
+                    radial-gradient(circle at 18% 8%, var(--audit-cyan), transparent 28rem),
+                    radial-gradient(circle at 88% 20%, var(--audit-emerald), transparent 26rem),
+                    radial-gradient(circle at 48% 106%, var(--audit-violet), transparent 30rem),
+                    #020617;
+            }
+
+            .audit-motion::after {
+                content: "";
+                position: fixed;
+                inset: -30%;
+                z-index: -9;
+                pointer-events: none;
+                background:
+                    linear-gradient(112deg, transparent 38%, rgba(103, 232, 249, 0.10) 48%, transparent 60%),
+                    linear-gradient(rgba(103, 232, 249, 0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(103, 232, 249, 0.03) 1px, transparent 1px);
+                background-size: auto, 42px 42px, 42px 42px;
+                mask-image: linear-gradient(to bottom, transparent, black 15%, black 78%, transparent);
+                mix-blend-mode: screen;
+                opacity: 0.58;
+                animation: auditFieldDrift 16s linear infinite;
+            }
+
+            .audit-panel {
+                position: relative;
+                isolation: isolate;
+            }
+
+            .audit-panel::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: -1;
+                pointer-events: none;
+                background: linear-gradient(120deg, transparent 0%, rgba(103, 232, 249, 0.075) 44%, transparent 66%);
+                opacity: 0;
+                transform: translateX(-32%);
+                transition: opacity 220ms ease, transform 560ms ease;
+            }
+
+            .audit-panel:hover::before {
+                opacity: 1;
+                transform: translateX(32%);
+            }
+
+            .audit-metric {
+                position: relative;
+                overflow: hidden;
+            }
+
+            .audit-metric::after {
+                content: "";
+                position: absolute;
+                inset: auto 12% 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, currentColor, transparent);
+                opacity: 0.18;
+                transition: opacity 200ms ease, transform 260ms ease;
+            }
+
+            .audit-metric:hover::after {
+                opacity: 0.55;
+                transform: translateY(-2px);
+            }
+
+            .audit-stream-row {
+                position: relative;
+            }
+
+            .audit-stream-row::before {
+                content: "";
+                position: absolute;
+                inset: 0 auto 0 0;
+                width: 3px;
+                background: linear-gradient(to bottom, transparent, rgba(52, 211, 153, 0.8), rgba(34, 211, 238, 0.75), transparent);
+                opacity: 0;
+                transition: opacity 180ms ease;
+            }
+
+            .audit-stream-row:hover::before,
+            .audit-stream-row.is-fresh::before {
+                opacity: 1;
+            }
+
+            .audit-live-pulse {
+                animation: auditLivePulse 2.4s ease-in-out infinite;
+            }
+
+            @keyframes auditFieldDrift {
+                from {
+                    transform: translate3d(-24px, -24px, 0);
+                }
+                to {
+                    transform: translate3d(42px, 42px, 0);
+                }
+            }
+
+            @keyframes auditLivePulse {
+                0%, 100% {
+                    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+                }
+                50% {
+                    box-shadow: 0 0 28px rgba(52, 211, 153, 0.16);
+                }
+            }
+
+            html:not(.dark) .audit-motion {
+                --audit-cyan: rgba(8, 145, 178, 0.12);
+                --audit-emerald: rgba(5, 150, 105, 0.10);
+                --audit-violet: rgba(99, 102, 241, 0.08);
+            }
+
+            html:not(.dark) .audit-motion::before {
+                background:
+                    radial-gradient(circle at 18% 8%, var(--audit-cyan), transparent 28rem),
+                    radial-gradient(circle at 88% 20%, var(--audit-emerald), transparent 26rem),
+                    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(226, 239, 247, 0.9));
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .audit-motion::after,
+                .audit-live-pulse {
+                    animation: none;
+                }
+
+                .audit-panel::before,
+                .audit-metric::after,
+                .audit-stream-row::before {
+                    transition: none;
+                }
+            }
+        </style>
+    @endpush
+
     <div
         x-data="auditLogsPage()"
         x-init="start()"
-        class="space-y-5"
+        class="audit-motion relative space-y-5"
     >
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -40,7 +189,7 @@
 
       <section class="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
     <!-- Current Signal -->
-    <div class="relative overflow-hidden rounded-2xl border border-cyan-400/10 bg-[#07111f]/95 shadow-2xl shadow-cyan-950/10">
+    <div class="audit-panel audit-live-pulse relative overflow-hidden rounded-2xl border border-cyan-400/10 bg-[#07111f]/95 shadow-2xl shadow-cyan-950/10">
         <div class="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl"></div>
         <div class="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl"></div>
 
@@ -157,35 +306,35 @@
 
                 <!-- Stats -->
                 <div class="grid grid-cols-2 gap-3 self-start">
-                    <div class="rounded-xl border border-slate-800 bg-slate-950/55 px-4 py-4 text-center">
+                    <div class="audit-metric rounded-xl border border-slate-800 bg-slate-950/55 px-4 py-4 text-center text-cyan-300">
                         <p class="text-[10px] font-black uppercase tracking-wider text-slate-600">
                             Projects
                         </p>
                         <p class="mt-2 text-2xl font-black text-cyan-300" x-text="stats.total_projects"></p>
                     </div>
 
-                    <div class="rounded-xl border border-slate-800 bg-slate-950/55 px-4 py-4 text-center">
+                    <div class="audit-metric rounded-xl border border-slate-800 bg-slate-950/55 px-4 py-4 text-center text-white">
                         <p class="text-[10px] font-black uppercase tracking-wider text-slate-600">
                             Events
                         </p>
                         <p class="mt-2 text-2xl font-black text-white" x-text="filteredLogs.length"></p>
                     </div>
 
-                    <div class="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-4 text-center">
+                    <div class="audit-metric rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-4 text-center text-red-300">
                         <p class="text-[10px] font-black uppercase tracking-wider text-red-200/70">
                             Critical
                         </p>
                         <p class="mt-2 text-2xl font-black text-red-300" x-text="stats.critical"></p>
                     </div>
 
-                    <div class="rounded-xl border border-orange-400/20 bg-orange-400/10 px-4 py-4 text-center">
+                    <div class="audit-metric rounded-xl border border-orange-400/20 bg-orange-400/10 px-4 py-4 text-center text-orange-300">
                         <p class="text-[10px] font-black uppercase tracking-wider text-orange-200/70">
                             High
                         </p>
                         <p class="mt-2 text-2xl font-black text-orange-300" x-text="stats.high"></p>
                     </div>
 
-                    <div class="rounded-xl border border-sky-400/20 bg-sky-400/10 px-4 py-4 text-center sm:col-span-2">
+                    <div class="audit-metric rounded-xl border border-sky-400/20 bg-sky-400/10 px-4 py-4 text-center text-sky-300 sm:col-span-2">
                         <p class="text-[10px] font-black uppercase tracking-wider text-sky-200/70">
                             Info
                         </p>
@@ -197,7 +346,7 @@
     </div>
 
     <!-- Stream Health -->
-    <div class="relative overflow-hidden rounded-2xl border border-slate-800 bg-[#07111f]/95 p-5 shadow-2xl shadow-black/20">
+    <div class="audit-panel relative overflow-hidden rounded-2xl border border-slate-800 bg-[#07111f]/95 p-5 shadow-2xl shadow-black/20">
         <div class="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl"></div>
 
         <div class="relative mb-5 flex items-start justify-between gap-3">
@@ -276,7 +425,7 @@
     </div>
 </section>
 
-       <section class="sticky top-4 z-20 rounded-2xl border border-slate-800/90 bg-[#07111f]/95 p-3 shadow-xl shadow-black/25 backdrop-blur-xl">
+       <section class="audit-panel sticky top-4 z-20 overflow-hidden rounded-2xl border border-slate-800/90 bg-[#07111f]/95 p-3 shadow-xl shadow-black/25 backdrop-blur-xl">
     <div class="flex flex-col gap-3 2xl:flex-row 2xl:items-center">
         <!-- Search -->
         <div class="relative min-w-0 flex-1">
@@ -397,7 +546,7 @@
 </section>
 
         <template x-if="errorMessage">
-            <section class="flex flex-col gap-3 rounded-xl border border-red-400/20 bg-red-400/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <section class="audit-panel flex flex-col gap-3 overflow-hidden rounded-xl border border-red-400/20 bg-red-400/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm font-black text-red-200">Audit feed unavailable</p>
                     <p class="mt-1 text-xs font-medium text-red-200/70" x-text="errorMessage"></p>
@@ -413,7 +562,7 @@
             </section>
         </template>
 
-        <section class="overflow-hidden rounded-xl border border-slate-800 bg-[#07111f]">
+        <section class="audit-panel overflow-hidden rounded-xl border border-slate-800 bg-[#07111f]">
             <div class="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Event Bus</p>
@@ -439,8 +588,8 @@
                 <div class="divide-y divide-slate-800" x-show="!loading">
                     <template x-for="log in filteredLogs" :key="log.id">
                         <article
-                            class="grid gap-3 px-5 py-4 transition lg:grid-cols-[112px_1fr_180px] lg:items-center"
-                            :class="isFresh(log.id) ? 'bg-cyan-400/[0.08] ring-1 ring-inset ring-cyan-400/20' : 'hover:bg-white/[0.025]'"
+                            class="audit-stream-row grid gap-3 px-5 py-4 transition lg:grid-cols-[112px_1fr_180px] lg:items-center"
+                            :class="isFresh(log.id) ? 'is-fresh bg-cyan-400/[0.08] ring-1 ring-inset ring-cyan-400/20' : 'hover:bg-white/[0.025]'"
                         >
                             <div class="flex items-center gap-3">
                                 <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="severityDot(log.severity)"></span>

@@ -1,16 +1,164 @@
 <x-dashboard-layout>
+    @push('styles')
+        <style>
+            .incident-motion {
+                --incident-cyan: rgba(34, 211, 238, 0.18);
+                --incident-red: rgba(248, 113, 113, 0.14);
+                --incident-amber: rgba(251, 191, 36, 0.10);
+            }
+
+            .incident-light-field {
+                background:
+                    radial-gradient(circle at 22% 14%, var(--incident-cyan), transparent 28rem),
+                    radial-gradient(circle at 88% 22%, var(--incident-red), transparent 24rem),
+                    radial-gradient(circle at 48% 110%, var(--incident-amber), transparent 30rem),
+                    linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(2, 6, 23, 0.86));
+            }
+
+            .incident-light-field::before,
+            .incident-light-field::after {
+                content: "";
+                position: absolute;
+                inset: -35%;
+                pointer-events: none;
+                opacity: 0.58;
+                mix-blend-mode: screen;
+            }
+
+            .incident-light-field::before {
+                background: linear-gradient(115deg, transparent 36%, rgba(103, 232, 249, 0.12) 47%, transparent 58%);
+                animation: incidentLightSweep 11s ease-in-out infinite;
+            }
+
+            .incident-light-field::after {
+                background:
+                    linear-gradient(rgba(103, 232, 249, 0.045) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(103, 232, 249, 0.035) 1px, transparent 1px);
+                background-size: 44px 44px;
+                mask-image: linear-gradient(to bottom, transparent, black 18%, black 72%, transparent);
+                animation: incidentGridDrift 18s linear infinite;
+            }
+
+            .incident-panel {
+                position: relative;
+            }
+
+            .incident-panel::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                background: linear-gradient(120deg, transparent 0%, rgba(103, 232, 249, 0.08) 42%, transparent 64%);
+                opacity: 0;
+                transform: translateX(-35%);
+                transition: opacity 220ms ease, transform 520ms ease;
+            }
+
+            .incident-panel:hover::before {
+                opacity: 1;
+                transform: translateX(35%);
+            }
+
+            .incident-card-light {
+                isolation: isolate;
+            }
+
+            .incident-card-light::after {
+                content: "";
+                position: absolute;
+                inset: -1px;
+                z-index: -1;
+                border-radius: inherit;
+                background: conic-gradient(from 180deg, transparent, rgba(103, 232, 249, 0.20), transparent, rgba(248, 113, 113, 0.16), transparent);
+                opacity: 0;
+                filter: blur(12px);
+                transition: opacity 240ms ease;
+            }
+
+            .incident-card-light:hover::after {
+                opacity: 0.65;
+                animation: incidentGlowSpin 4.8s linear infinite;
+            }
+
+            .incident-row {
+                position: relative;
+            }
+
+            .incident-row::before {
+                content: "";
+                position: absolute;
+                inset: 0 auto 0 0;
+                width: 3px;
+                background: linear-gradient(to bottom, transparent, rgba(103, 232, 249, 0.75), transparent);
+                opacity: 0;
+                transition: opacity 180ms ease;
+            }
+
+            .incident-row:hover::before {
+                opacity: 1;
+            }
+
+            @keyframes incidentLightSweep {
+                0%, 100% {
+                    transform: translate3d(-18%, -8%, 0) rotate(0deg);
+                }
+                50% {
+                    transform: translate3d(18%, 8%, 0) rotate(6deg);
+                }
+            }
+
+            @keyframes incidentGridDrift {
+                from {
+                    transform: translate3d(0, 0, 0);
+                }
+                to {
+                    transform: translate3d(44px, 44px, 0);
+                }
+            }
+
+            @keyframes incidentGlowSpin {
+                to {
+                    transform: rotate(1turn);
+                }
+            }
+
+            html:not(.dark) .incident-motion {
+                --incident-cyan: rgba(8, 145, 178, 0.14);
+                --incident-red: rgba(225, 29, 72, 0.10);
+                --incident-amber: rgba(217, 119, 6, 0.10);
+            }
+
+            html:not(.dark) .incident-light-field {
+                background:
+                    radial-gradient(circle at 22% 14%, var(--incident-cyan), transparent 28rem),
+                    radial-gradient(circle at 88% 22%, var(--incident-red), transparent 24rem),
+                    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(226, 239, 247, 0.88));
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .incident-light-field::before,
+                .incident-light-field::after,
+                .incident-card-light:hover::after {
+                    animation: none;
+                }
+
+                .incident-panel::before {
+                    transition: none;
+                }
+            }
+        </style>
+    @endpush
+
     <div
         x-data="incidentsPage()"
         x-init="$watch('search', () => resetPage())"
-        class="relative space-y-6 overflow-hidden"
+        class="incident-motion relative space-y-6 overflow-hidden"
     >
         {{-- Ambient background --}}
-        <div class="pointer-events-none fixed inset-0 -z-10 bg-[#020617]"></div>
-        <div class="pointer-events-none fixed left-1/2 top-0 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl"></div>
-        <div class="pointer-events-none fixed right-0 top-32 -z-10 h-80 w-80 rounded-full bg-red-500/10 blur-3xl"></div>
+        <div class="incident-light-field pointer-events-none fixed inset-0 -z-10 overflow-hidden"></div>
 
         {{-- Header --}}
-        <section class="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-black/30 backdrop-blur xl:p-8">
+        <section class="incident-panel relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-black/30 backdrop-blur xl:p-8">
             <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent"></div>
             <div class="absolute -right-24 -top-24 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl"></div>
             <div class="absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-red-400/10 blur-3xl"></div>
@@ -42,7 +190,7 @@
                 </div>
 
                 <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[420px]">
-                    <div class="rounded-3xl border border-red-300/20 bg-red-400/10 p-5 shadow-lg shadow-red-950/20">
+                    <div class="incident-card-light relative rounded-3xl border border-red-300/20 bg-red-400/10 p-5 shadow-lg shadow-red-950/20">
                         <p class="text-[10px] font-black uppercase tracking-[0.22em] text-red-200/70">
                             Open incidents
                         </p>
@@ -59,7 +207,7 @@
 
                     <a
                         href="{{ route('audit-logs.index') }}"
-                        class="group flex items-center justify-between rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-5 shadow-lg shadow-cyan-950/20 transition hover:-translate-y-0.5 hover:bg-cyan-300/15"
+                        class="incident-card-light group relative flex items-center justify-between rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-5 shadow-lg shadow-cyan-950/20 transition hover:-translate-y-0.5 hover:bg-cyan-300/15"
                     >
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200/70">
@@ -109,7 +257,7 @@
             @endphp
 
             @foreach ($cards as $card)
-                <div class="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br {{ $card['bg'] }} to-slate-950/90 p-5 shadow-xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 {{ $card['ring'] }}">
+                <div class="incident-card-light group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br {{ $card['bg'] }} to-slate-950/90 p-5 shadow-xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 {{ $card['ring'] }}">
                     <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/5 blur-2xl transition group-hover:bg-white/10"></div>
 
                     <div class="relative flex items-start justify-between gap-4">
@@ -130,7 +278,7 @@
         </section>
 
         {{-- Filters --}}
-        <section class="rounded-3xl border border-white/10 bg-slate-950/75 p-4 shadow-xl shadow-black/20 backdrop-blur">
+        <section class="incident-panel overflow-hidden rounded-3xl border border-white/10 bg-slate-950/75 p-4 shadow-xl shadow-black/20 backdrop-blur">
             <div class="grid gap-3 lg:grid-cols-[1fr_180px_180px] lg:items-center">
                 <div class="relative">
                     <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
@@ -171,7 +319,7 @@
         </section>
 
         {{-- Table --}}
-        <section class="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80 shadow-2xl shadow-black/30 backdrop-blur">
+        <section class="incident-panel overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80 shadow-2xl shadow-black/30 backdrop-blur">
             <div class="flex flex-col gap-4 border-b border-white/10 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300/60">
@@ -228,7 +376,7 @@
                         </template>
 
                         <template x-for="row in paginatedRows" :key="row.id">
-                            <tr class="group transition hover:bg-white/[0.035]">
+                            <tr class="incident-row group transition hover:bg-white/[0.035]">
                                 <td class="px-6 py-5 align-top">
                                     <div class="mb-3 flex flex-wrap items-center gap-2">
                                         <span
