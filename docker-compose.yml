@@ -21,20 +21,29 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_KEY: ${APP_KEY}
-
+      MAIL_MAILER: ${MAIL_MAILER}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+      CLOUDFLARE_BASE_URL: ${CLOUDFLARE_BASE_URL}
+      WPSCAN_API_TOKEN: ${WPSCAN_API_TOKEN}
       LOG_CHANNEL: stack
-
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
       DB_DATABASE: laravel
       DB_USERNAME: laravel
       DB_PASSWORD: secret
-
       CACHE_DRIVER: file
       SESSION_DRIVER: file
       QUEUE_CONNECTION: sync
-
       MONGODB_URI: mongodb://mongodb:27017/laravel
 
     depends_on:
