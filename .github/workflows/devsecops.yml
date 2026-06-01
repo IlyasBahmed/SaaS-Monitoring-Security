@@ -142,22 +142,21 @@ jobs:
           severity: CRITICAL,HIGH
   
   deploy:
-    needs: container-security
-    runs-on: ubuntu-latest
+  needs: container-security
+  runs-on: ubuntu-latest
 
-    steps:
-      - name: Deploy to VM
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VM_IP }}
-          username: azureuser
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: APP_KEY
-          script: |
-            cd /opt/project
+  steps:
+    - name: Deploy to VM
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VM_IP }}
+        username: azureuser
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-            echo "APP_KEY=${APP_KEY}" >> .env
+        script: |
+          cd /opt/project
 
-            git pull origin main
-            docker-compose down
-            docker-compose up -d --build
+          git pull origin main
+
+          docker compose down
+          docker compose up -d --build
