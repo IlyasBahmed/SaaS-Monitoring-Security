@@ -133,6 +133,77 @@
                     linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(226, 239, 247, 0.9));
             }
 
+            html:not(.dark) .audit-motion::after {
+                background:
+                    linear-gradient(112deg, transparent 38%, rgba(8, 145, 178, 0.08) 48%, transparent 60%),
+                    linear-gradient(rgba(8, 145, 178, 0.035) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(8, 145, 178, 0.028) 1px, transparent 1px);
+                opacity: 0.46;
+                mix-blend-mode: multiply;
+            }
+
+            html:not(.dark) .audit-panel {
+                background: rgba(255, 255, 255, 0.9);
+                border-color: rgba(203, 213, 225, 0.92);
+                box-shadow: 0 20px 42px -30px rgba(15, 23, 42, 0.38);
+            }
+
+            html:not(.dark) .audit-panel::before {
+                background: linear-gradient(120deg, transparent 0%, rgba(8, 145, 178, 0.085) 44%, transparent 66%);
+            }
+
+            html:not(.dark) .audit-metric {
+                background-color: rgba(248, 250, 252, 0.78);
+                border-color: rgba(203, 213, 225, 0.9);
+            }
+
+            html:not(.dark) .audit-motion :where(input, select) {
+                background-color: rgba(255, 255, 255, 0.94);
+                border-color: rgba(203, 213, 225, 0.95);
+                color: #0f172a;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+            }
+
+            html:not(.dark) .audit-motion :where(input, select):focus {
+                background-color: #ffffff;
+                border-color: rgba(8, 145, 178, 0.38);
+                box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.10);
+            }
+
+            html:not(.dark) .audit-motion :where(.bg-\[\#07111f\], .bg-\[\#07111f\]\/95, .bg-\[\#020617\]\/70, .bg-\[\#020617\]\/80, .bg-slate-950\/40, .bg-slate-950\/45, .bg-slate-950\/55) {
+                background-color: rgba(248, 250, 252, 0.82);
+            }
+
+            html:not(.dark) .audit-motion :where(.border-slate-800, .border-slate-800\/90, .divide-slate-800 > :not([hidden]) ~ :not([hidden])) {
+                border-color: rgba(203, 213, 225, 0.9);
+            }
+
+            html:not(.dark) .audit-stream-row:hover {
+                background-color: rgba(236, 254, 255, 0.72);
+            }
+
+            html:not(.dark) .audit-stream-row.is-fresh {
+                background-color: rgba(207, 250, 254, 0.62);
+                box-shadow: inset 0 0 0 1px rgba(8, 145, 178, 0.16);
+            }
+
+            html:not(.dark) .audit-stream-row::before {
+                background: linear-gradient(to bottom, transparent, rgba(5, 150, 105, 0.72), rgba(8, 145, 178, 0.68), transparent);
+            }
+
+            html:not(.dark) .audit-live-pulse {
+                animation-name: auditLivePulseLight;
+            }
+
+            @keyframes auditLivePulseLight {
+                0%, 100% {
+                    box-shadow: 0 18px 34px -30px rgba(15, 23, 42, 0.35);
+                }
+                50% {
+                    box-shadow: 0 18px 34px -30px rgba(15, 23, 42, 0.35), 0 0 30px rgba(5, 150, 105, 0.13);
+                }
+            }
+
             @media (prefers-reduced-motion: reduce) {
                 .audit-motion::after,
                 .audit-live-pulse {

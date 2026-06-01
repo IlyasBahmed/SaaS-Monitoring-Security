@@ -135,6 +135,58 @@
                     linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(226, 239, 247, 0.88));
             }
 
+            html:not(.dark) .incident-panel {
+                background: rgba(255, 255, 255, 0.88);
+                border-color: rgba(203, 213, 225, 0.9);
+                box-shadow: 0 20px 42px -30px rgba(15, 23, 42, 0.38);
+            }
+
+            html:not(.dark) .incident-panel::before {
+                background: linear-gradient(120deg, transparent 0%, rgba(8, 145, 178, 0.09) 42%, transparent 64%);
+            }
+
+            html:not(.dark) .incident-card-light {
+                box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.45);
+            }
+
+            html:not(.dark) .incident-card-light::after {
+                background: conic-gradient(from 180deg, transparent, rgba(8, 145, 178, 0.18), transparent, rgba(225, 29, 72, 0.12), transparent);
+            }
+
+            html:not(.dark) .incident-motion :where(input, select) {
+                background-color: rgba(255, 255, 255, 0.92);
+                border-color: rgba(203, 213, 225, 0.95);
+                color: #0f172a;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+            }
+
+            html:not(.dark) .incident-motion :where(input, select):focus {
+                background-color: #ffffff;
+                border-color: rgba(8, 145, 178, 0.38);
+                box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.10);
+            }
+
+            html:not(.dark) .incident-motion :where(thead, .bg-slate-950\/70, .bg-slate-950\/80, .bg-slate-950\/90, .bg-slate-950) {
+                background-color: rgba(248, 250, 252, 0.88);
+            }
+
+            html:not(.dark) .incident-motion :where(.border-white\/10, .divide-white\/5 > :not([hidden]) ~ :not([hidden])) {
+                border-color: rgba(203, 213, 225, 0.86);
+            }
+
+            html:not(.dark) .incident-row:hover {
+                background-color: rgba(236, 254, 255, 0.72);
+            }
+
+            html:not(.dark) .incident-row::before {
+                background: linear-gradient(to bottom, transparent, rgba(8, 145, 178, 0.72), transparent);
+            }
+
+            html:not(.dark) .incident-motion .shadow-black\/30,
+            html:not(.dark) .incident-motion .shadow-black\/20 {
+                --tw-shadow-color: rgba(148, 163, 184, 0.24);
+            }
+
             @media (prefers-reduced-motion: reduce) {
                 .incident-light-field::before,
                 .incident-light-field::after,
