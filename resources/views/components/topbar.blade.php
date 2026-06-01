@@ -8,7 +8,7 @@
     <button type="button"
             @click="sidebarOpen = true"
             aria-label="Open navigation"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-100 bg-white text-slate-500 shadow-lg shadow-slate-200/50 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 lg:hidden dark:border-cyan-400/10 dark:bg-[#020617] dark:text-slate-400 dark:shadow-none dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/5 dark:hover:text-cyan-300">
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-100 bg-white text-slate-500 shadow-lg shadow-slate-200/50 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 md:hidden dark:border-cyan-400/10 dark:bg-[#020617] dark:text-slate-400 dark:shadow-none dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/5 dark:hover:text-cyan-300">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/>
         </svg>

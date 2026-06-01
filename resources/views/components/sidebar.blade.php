@@ -83,8 +83,8 @@ $items = $filteredItems;
 @endphp
 
 <aside
-    class="fixed inset-y-0 left-0 z-50 flex h-screen w-72 max-w-[calc(100vw-2rem)] shrink-0 flex-col overflow-hidden border-r border-cyan-100 bg-white text-slate-700 shadow-xl shadow-slate-200/50 transition-transform duration-200 ease-out [height:100dvh] lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:translate-x-0 dark:border-cyan-500/10 dark:bg-[#020617] dark:text-slate-300 dark:shadow-none"
-    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+    class="fixed inset-y-0 left-0 z-50 flex h-screen w-72 max-w-[calc(100vw-2rem)] shrink-0 flex-col overflow-hidden border-r border-cyan-100 bg-white text-slate-700 shadow-xl shadow-slate-200/50 transition-transform duration-200 ease-out [height:100dvh] md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 dark:border-cyan-500/10 dark:bg-[#020617] dark:text-slate-300 dark:shadow-none"
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
 >
 
     <div class="p-6">
