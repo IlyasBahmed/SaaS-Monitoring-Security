@@ -82,7 +82,10 @@ foreach ($isClient ? [] : $items as $item) {
 $items = $filteredItems;
 @endphp
 
-<aside class="sticky top-0 h-screen w-64 shrink-0 overflow-hidden bg-white border-r border-cyan-100 flex flex-col text-slate-700 shadow-xl shadow-slate-200/50 dark:bg-[#020617] dark:border-cyan-500/10 dark:text-slate-300 dark:shadow-none">
+<aside
+    class="fixed inset-y-0 left-0 z-50 flex h-screen w-72 max-w-[calc(100vw-2rem)] shrink-0 flex-col overflow-hidden border-r border-cyan-100 bg-white text-slate-700 shadow-xl shadow-slate-200/50 transition-transform duration-200 ease-out [height:100dvh] lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:translate-x-0 dark:border-cyan-500/10 dark:bg-[#020617] dark:text-slate-300 dark:shadow-none"
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+>
 
     <div class="p-6">
         <div class="flex items-center gap-3">
@@ -125,6 +128,7 @@ $items = $filteredItems;
                 @endphp
 
                 <a href="{{ $href }}"
+                   @click="sidebarOpen = false"
                    class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-all duration-200
                    {{ $isActive
                         ? 'bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-lg shadow-cyan-100/70 dark:bg-cyan-400/10 dark:text-cyan-100 dark:border-cyan-400/20 dark:shadow-cyan-500/5'
@@ -244,7 +248,7 @@ $items = $filteredItems;
             <div class="h-8 w-8 rounded-full bg-cyan-50 border border-cyan-200 flex items-center justify-center text-[10px] font-bold text-cyan-700 dark:bg-cyan-500/20 dark:border-cyan-500/40 dark:text-cyan-300">
                 {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
             </div>
-            <div>
+            <div class="min-w-0">
                 <p class="text-xs font-bold text-slate-900 dark:text-white">
                     {{ Auth::user()->name ?? 'Admin' }}
                 </p>

@@ -15,6 +15,17 @@ body {
     text-rendering: geometricPrecision;
 }
 
+@media (max-width: 768px) {
+    main table {
+        min-width: 720px;
+    }
+
+    main :where(.overflow-hidden):has(> table) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 ::selection {
     background: #22d3ee;
     color: #020617;

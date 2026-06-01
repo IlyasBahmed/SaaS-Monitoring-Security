@@ -14,17 +14,27 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body
-    x-data="{ darkMode: document.documentElement.classList.contains('dark') }"
+    x-data="{ darkMode: document.documentElement.classList.contains('dark'), sidebarOpen: false }"
     x-init="$watch('darkMode', value => {
         document.documentElement.classList.toggle('dark', value);
         localStorage.setItem('theme', value ? 'dark' : 'light');
     })"
-    class="bg-slate-100 text-slate-950 transition-colors duration-300 dark:bg-[#020617] dark:text-white"
+    @keydown.escape.window="sidebarOpen = false"
+    class="overflow-x-hidden bg-slate-100 text-slate-950 transition-colors duration-300 dark:bg-[#020617] dark:text-white"
 >
     <div class="min-h-screen flex">
+        <div
+            x-show="sidebarOpen"
+            x-cloak
+            x-transition.opacity
+            @click="sidebarOpen = false"
+            class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden"
+            aria-hidden="true"
+        ></div>
+
         <x-sidebar />
 
-        <main class="min-w-0 flex-1 overflow-y-auto bg-slate-50/70 p-4 text-slate-950 md:p-6 dark:bg-transparent dark:text-white">
+        <main class="min-w-0 flex-1 overflow-y-auto bg-slate-50/70 p-3 text-slate-950 sm:p-4 md:p-6 dark:bg-transparent dark:text-white">
             <div class="mx-auto max-w-[1600px]">
                 <x-topbar />
                 {{ $slot }}

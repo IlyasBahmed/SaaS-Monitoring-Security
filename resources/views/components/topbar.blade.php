@@ -3,10 +3,19 @@
     $isClient = strtolower(trim((string) ($user->role ?? ''))) === 'client';
 @endphp
 
-<div class="flex items-center justify-between gap-4 mb-6">
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+
+    <button type="button"
+            @click="sidebarOpen = true"
+            aria-label="Open navigation"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-100 bg-white text-slate-500 shadow-lg shadow-slate-200/50 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 lg:hidden dark:border-cyan-400/10 dark:bg-[#020617] dark:text-slate-400 dark:shadow-none dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/5 dark:hover:text-cyan-300">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/>
+        </svg>
+    </button>
 
     {{-- Search --}}
-    <div class="relative w-full max-w-[30rem] group">
+    <div class="group relative min-w-0 flex-1 sm:min-w-[16rem] sm:max-w-[30rem]">
         {{-- Focus glow --}}
         <div class="pointer-events-none absolute -inset-[1px] rounded-[1.35rem] bg-gradient-to-r from-cyan-400/25 via-blue-500/15 to-indigo-400/25 opacity-0 blur-sm transition duration-300 group-focus-within:opacity-100"></div>
 
@@ -62,7 +71,7 @@
     </div>
 
     {{-- Right --}}
-    <div class="flex items-center gap-3">
+    <div class="flex shrink-0 items-center gap-2 sm:gap-3">
 
         {{-- Status --}}
         <div class="hidden lg:flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-400/10 dark:bg-emerald-400/5 dark:text-emerald-300">
