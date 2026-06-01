@@ -11,8 +11,9 @@ services:
 
     working_dir: /var/www
 
-    # volumes:
-    #   - .:/var/www
+    volumes:
+      - public_data:/var/www/public
+      #  - .:/var/www
 
     environment:
       APP_ENV: local
@@ -52,6 +53,7 @@ services:
       - "80:80"
 
     volumes:
+      - public_data:/var/www/public 
       # - .:/var/www
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
 
@@ -99,6 +101,7 @@ services:
       - app-network
 
 volumes:
+  public_data:
   postgres_data:
   mongodb_data:
 
