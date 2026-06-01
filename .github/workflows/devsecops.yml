@@ -149,11 +149,15 @@ jobs:
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_IP }}
-          username: azureuser
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /opt/project
-            git pull origin main
-            docker-compose down
-            docker-compose up -d --build
+        host: ${{ secrets.VM_IP }}
+        username: azureuser
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: APP_KEY
+        script: |
+         cd /opt/project
+
+         echo "APP_KEY=${APP_KEY}" >> .env
+
+         git pull origin main
+         docker-compose down
+         docker-compose up -d --build
