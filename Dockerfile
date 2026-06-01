@@ -3,6 +3,7 @@
 # =========================
 FROM php:8.3-cli-alpine AS composer
 
+
 # Installer PHP extensions helper
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
@@ -57,6 +58,7 @@ RUN npm run build
 # Stage 3 — Production
 # =========================
 FROM php:8.3-fpm-alpine
+RUN apk update && apk upgrade --no-cache
 
 # Installer PHP extensions helper
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
