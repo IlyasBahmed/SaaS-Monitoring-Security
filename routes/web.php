@@ -101,8 +101,8 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         $recentAlerts = collect(rescue(
             fn () => Alert::query()
                 ->whereIn('project_id', $projectIds->all())
-                ->orderByDesc('detected_at')
-                ->orderByDesc('created_at')
+                ->orderBy('detected_at', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->take(8)
                 ->get(),
             collect(),
@@ -359,8 +359,8 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         $alerts = collect(rescue(
             fn () => Alert::query()
                 ->where('project_id', $projectId)
-                ->orderByDesc('detected_at')
-                ->orderByDesc('created_at')
+                ->orderBy('detected_at', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->take(20)
                 ->get(),
             collect(),
@@ -601,8 +601,8 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             : collect(rescue(
                 fn () => Alert::query()
                     ->whereIn('project_id', $projectIds->all())
-                    ->orderByDesc('detected_at')
-                    ->orderByDesc('created_at')
+                    ->orderBy('detected_at', 'desc')
+                    ->orderBy('created_at', 'desc')
                     ->take(200)
                     ->get(),
                 collect(),
@@ -783,7 +783,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             fn () => Alert::query()
                 ->where('project_id', $projectId)
                 ->where('detected_at', '>=', $from)
-                ->latest('detected_at')
+                ->orderBy('detected_at', 'desc')
                 ->get(),
             collect(),
             false
@@ -2317,8 +2317,8 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     Route::get('/alerts', function () {
         $alerts = collect(rescue(
             fn () => Alert::query()
-                ->orderByDesc('detected_at')
-                ->orderByDesc('created_at')
+                ->orderBy('detected_at', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->take(200)
                 ->get(),
             collect(),
@@ -2496,7 +2496,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
 
         $alerts = collect(rescue(
             fn () => Alert::query()
-                ->orderByDesc('detected_at')
+                ->orderBy('detected_at', 'desc')
                 ->take(300)
                 ->get(),
             collect(),

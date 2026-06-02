@@ -53,8 +53,8 @@ class Topbar extends Component
                 }
 
                 return $query
-                    ->orderByDesc('detected_at')
-                    ->orderByDesc('created_at')
+                    ->orderBy('detected_at', 'desc')
+                    ->orderBy('created_at', 'desc')
                     ->take(5)
                     ->get();
             },

@@ -25,7 +25,7 @@ class DashboardController extends Controller
         $projectIds = $projects->pluck('id')->map(fn ($id) => (int) $id)->values();
 
         $alerts = collect(rescue(fn () =>
-            Alert::whereIn('project_id', $projectIds->all())->latest('detected_at')->take(160)->get(),
+            Alert::whereIn('project_id', $projectIds->all())->orderBy('detected_at', 'desc')->take(160)->get(),
             collect(),
             false
         ));

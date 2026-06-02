@@ -43,7 +43,7 @@ class GlobalReportController extends Controller
         $projectAgents = ProjectAgent::with(['project', 'agent'])->latest()->get();
 
         try {
-            $alerts = Alert::where('detected_at', '>=', $from)->latest('detected_at')->get();
+            $alerts = Alert::where('detected_at', '>=', $from)->orderBy('detected_at', 'desc')->get();
             $incidents = Incident::where('event_created_at', '>=', $from)->latest('event_created_at')->get();
             $vulnerabilities = SiteVulnerability::where('detected_at', '>=', $from)->latest('detected_at')->get();
             $inventories = SiteInventory::latest('collected_at')->get();
