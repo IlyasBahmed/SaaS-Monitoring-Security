@@ -792,7 +792,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             fn () => Incident::query()
                 ->where('project_id', $projectId)
                 ->where('event_created_at', '>=', $from)
-                ->latest('event_created_at')
+                ->orderBy('event_created_at', 'desc')
                 ->get(),
             collect(),
             false
@@ -801,7 +801,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             fn () => SiteVulnerability::query()
                 ->where('project_id', $projectId)
                 ->where('detected_at', '>=', $from)
-                ->latest('detected_at')
+                ->orderBy('detected_at', 'desc')
                 ->get(),
             collect(),
             false
@@ -810,7 +810,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             fn () => HealthReport::query()
                 ->where('project_id', $projectId)
                 ->where('event_created_at', '>=', $from)
-                ->latest('event_created_at')
+                ->orderBy('event_created_at', 'desc')
                 ->get(),
             collect(),
             false

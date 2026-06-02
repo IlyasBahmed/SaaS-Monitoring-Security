@@ -22,10 +22,23 @@ class ProjectSecurityController extends Controller
 
             $result = $scanner->scan($project);
 
-            return back()->with(
+            if (! ($result['success'] ?? false)) {
+                return back()->with(
+                    'error',
+                    $result['message'] ?? 'Scan failed.'
+                );
+            }
+
+            $response = back()->with(
                 'success',
-                'Scan completed: ' . $result['count'] . ' vulnerabilities found.'
+                'Scan completed: ' . ($result['count'] ?? 0) . ' vulnerabilities found across ' . ($result['searched'] ?? 0) . ' active searches.'
             );
+
+            if (! empty($result['errors'])) {
+                $response->with('scan_errors', $result['errors']);
+            }
+
+            return $response;
 
         } catch (Throwable $e) {
 
