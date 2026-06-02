@@ -44,11 +44,11 @@ class GlobalReportController extends Controller
 
         try {
             $alerts = Alert::where('detected_at', '>=', $from)->orderBy('detected_at', 'desc')->get();
-            $incidents = Incident::where('event_created_at', '>=', $from)->latest('event_created_at')->get();
-            $vulnerabilities = SiteVulnerability::where('detected_at', '>=', $from)->latest('detected_at')->get();
-            $inventories = SiteInventory::latest('collected_at')->get();
-            $agentLogs = AgentLog::where('event_created_at', '>=', $from)->latest('event_created_at')->limit(50)->get();
-            $healthReports = HealthReport::where('event_created_at', '>=', $from)->latest('event_created_at')->limit(30)->get();
+            $incidents = Incident::where('event_created_at', '>=', $from)->orderBy('event_created_at', 'desc')->get();
+            $vulnerabilities = SiteVulnerability::where('detected_at', '>=', $from)->orderBy('detected_at', 'desc')->get();
+            $inventories = SiteInventory::orderBy('collected_at', 'desc')->get();
+            $agentLogs = AgentLog::where('event_created_at', '>=', $from)->orderBy('event_created_at', 'desc')->limit(50)->get();
+            $healthReports = HealthReport::where('event_created_at', '>=', $from)->orderBy('event_created_at', 'desc')->limit(30)->get();
             $mongoError = null;
         } catch (Throwable $e) {
             $alerts = collect();

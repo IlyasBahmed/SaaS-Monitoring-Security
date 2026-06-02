@@ -14,62 +14,6 @@
         </svg>
     </button>
 
-    {{-- Search --}}
-    <div class="group relative min-w-0 flex-1 sm:min-w-[16rem] sm:max-w-[30rem]">
-        {{-- Focus glow --}}
-        <div class="pointer-events-none absolute -inset-[1px] rounded-[1.35rem] bg-gradient-to-r from-cyan-400/25 via-blue-500/15 to-indigo-400/25 opacity-0 blur-sm transition duration-300 group-focus-within:opacity-100"></div>
-
-        {{-- Search Box --}}
-        <div class="relative flex items-center gap-3 overflow-hidden rounded-[1.35rem] border border-slate-200
-                    bg-white/85 px-3.5 py-2.5 shadow-lg shadow-slate-200/60 backdrop-blur-xl
-                    transition duration-300
-                    before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-cyan-200/70
-                    group-hover:border-cyan-300/50 group-hover:bg-white
-                    focus-within:border-cyan-400/60 focus-within:bg-white
-                    focus-within:ring-2 focus-within:ring-cyan-400/15
-                    dark:border-cyan-400/10 dark:bg-[#020617]/85 dark:shadow-black/20
-                    dark:before:bg-cyan-300/15 dark:group-hover:border-cyan-400/25 dark:group-hover:bg-[#07111f]/90
-                    dark:focus-within:border-cyan-300/55 dark:focus-within:bg-[#07111f]/95">
-
-            {{-- Icon --}}
-            <div class="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cyan-200/70
-                        bg-cyan-50 text-slate-500 transition duration-300
-                        group-hover:border-cyan-400/20 group-hover:text-cyan-300
-                        group-focus-within:border-cyan-300/50 group-focus-within:bg-cyan-100 group-focus-within:text-cyan-700
-                        dark:border-cyan-400/10 dark:bg-cyan-400/[0.04] dark:group-focus-within:border-cyan-300/30
-                        dark:group-focus-within:bg-cyan-400/10 dark:group-focus-within:text-cyan-200">
-                <svg class="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"/>
-                </svg>
-            </div>
-
-            {{-- Input --}}
-            <input
-                type="search"
-                aria-label="Search threats, IPs, and domains"
-                placeholder="Search threats, IPs, domains..."
-                class="relative z-10 min-w-0 flex-1 bg-transparent text-sm font-medium text-slate-800 outline-none
-                       placeholder:text-slate-400 selection:bg-cyan-400/20 selection:text-cyan-900
-                       dark:text-slate-100 dark:placeholder:text-slate-500 dark:selection:text-cyan-100"
-            />
-
-            {{-- Action --}}
-            <button type="button"
-                    aria-label="Submit search"
-                    class="relative z-10 hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg
-                           bg-cyan-50 text-cyan-700 transition duration-300
-                           hover:bg-cyan-100 hover:text-cyan-900
-                           group-focus-within:bg-cyan-100 group-focus-within:shadow-[0_0_16px_rgba(34,211,238,0.14)]
-                           dark:bg-cyan-400/10 dark:text-cyan-300 dark:hover:bg-cyan-400/15 dark:hover:text-cyan-100
-                           dark:group-focus-within:bg-cyan-400/15 dark:group-focus-within:shadow-[0_0_16px_rgba(34,211,238,0.18)] md:inline-flex">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-
     {{-- Right --}}
     <div class="flex shrink-0 items-center gap-2 sm:gap-3">
 
