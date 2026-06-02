@@ -114,7 +114,7 @@ services:
   queue:
     build:
       context: .
-      dockerfile: docker/php/Dockerfile
+      dockerfile: Dockerfile
     container_name: laravel_queue
     working_dir: /var/www
     command: php artisan queue:work --tries=3
