@@ -15,7 +15,6 @@ services:
 
     volumes:
       - public_data:/var/www/public
-      - .:/var/www
 
     environment:
       APP_ENV: local
@@ -118,8 +117,6 @@ services:
     container_name: laravel_queue
     working_dir: /var/www
     command: php artisan queue:work --tries=3
-    volumes:
-      - .:/var/www
     depends_on:
       - postgres
       - mongodb
