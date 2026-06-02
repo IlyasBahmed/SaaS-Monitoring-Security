@@ -44,7 +44,7 @@ services:
       CACHE_DRIVER: file
       SESSION_DRIVER: file
       QUEUE_CONNECTION: sync
-      MONGODB_URI: mongodb://mongodb:27017/laravel
+      MONGODB_URI: mongodb://mongodb:27017/saas
 
     depends_on:
       - postgres
