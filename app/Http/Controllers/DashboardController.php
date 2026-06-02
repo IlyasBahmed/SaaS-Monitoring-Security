@@ -55,7 +55,10 @@ class DashboardController extends Controller
         ));
 
         $auditLogs = collect(rescue(fn () =>
-            AuditLog::whereIn('project_id', $projectIds->all())->latest('event_created_at')->take(160)->get(),
+            AuditLog::whereIn('project_id', $projectIds->all())
+                ->orderBy('event_created_at', 'desc')
+                ->take(160)
+                ->get(),
             collect(),
             false
         ));

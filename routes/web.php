@@ -1446,8 +1446,8 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     Route::get('/audit-logs/feed', function () {
         $logs = collect(rescue(
             fn () => AuditLog::query()
-                ->orderByDesc('event_created_at')
-                ->orderByDesc('created_at')
+                ->orderBy('event_created_at', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->take(120)
                 ->get(),
             collect(),
@@ -1870,8 +1870,8 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
 
         $edgeLogs = collect(rescue(
             fn () => AuditLog::query()
-                ->orderByDesc('event_created_at')
-                ->orderByDesc('created_at')
+                ->orderBy('event_created_at', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->take(160)
                 ->get(),
             collect(),
