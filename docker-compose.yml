@@ -43,7 +43,7 @@ services:
       DB_PASSWORD: secret
       CACHE_DRIVER: file
       SESSION_DRIVER: file
-      QUEUE_CONNECTION: sync
+      QUEUE_CONNECTION: database
       MONGODB_URI: mongodb://mongodb:27017/saas
 
     depends_on:
@@ -108,6 +108,21 @@ services:
     ports:
       - "27017:27017"
 
+    networks:
+      - app-network
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: laravel_queue
+    working_dir: /var/www
+    command: php artisan queue:work --tries=3
+    volumes:
+      - .:/var/www
+    depends_on:
+      - postgres
+      - mongodb
     networks:
       - app-network
 
