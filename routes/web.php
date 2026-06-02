@@ -1626,8 +1626,8 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         $canTakeIncidents = in_array(strtolower((string) $currentUser?->role), ['soc analyst', 'super admin', 'admin'], true);
         $incidents = collect(rescue(
             fn () => Incident::query()
-                ->orderByDesc('event_created_at')
-                ->orderByDesc('created_at')
+                ->orderBy('event_created_at', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->take(120)
                 ->get(),
             collect(),

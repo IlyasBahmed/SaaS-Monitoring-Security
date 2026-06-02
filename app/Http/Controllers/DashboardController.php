@@ -31,7 +31,10 @@ class DashboardController extends Controller
         ));
 
         $incidents = collect(rescue(fn () =>
-            Incident::whereIn('project_id', $projectIds->all())->latest('event_created_at')->take(160)->get(),
+            Incident::whereIn('project_id', $projectIds->all())
+                ->orderBy('event_created_at', 'desc')
+                ->take(160)
+                ->get(),
             collect(),
             false
         ));
