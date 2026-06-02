@@ -15,7 +15,7 @@ services:
 
     volumes:
       - public_data:/var/www/public
-      #  - .:/var/www
+      - .:/var/www
 
     environment:
       APP_ENV: local
