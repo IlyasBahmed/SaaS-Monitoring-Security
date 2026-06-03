@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>SOC Executive Report | Armious Protect</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @page {
             size: A4;
-            margin: 0;
+            margin: 10mm 10mm 12mm;
         }
 
         * {
+            box-sizing: border-box;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -18,39 +18,447 @@
         body {
             margin: 0;
             padding: 0;
-            background: #f0f4f8;
+            background: #eef2f7;
+            color: #172033;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            line-height: 1.38;
         }
 
-        /* A4 page container */
-        .a4-page {
-            width: 210mm;
-            min-height: 297mm;
+        .page {
+            width: 100%;
+            max-width: 190mm;
             margin: 0 auto;
-            background: white;
-            padding: 12mm 18mm 10mm 18mm;
-            box-sizing: border-box;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            padding: 0;
+            background: #ffffff;
+            overflow: visible;
         }
 
-        /* Print optimizations */
+        .top-bar {
+            height: 5px;
+            background: linear-gradient(90deg, #0f766e, #10b981, #0f766e);
+            margin-bottom: 12px;
+        }
+
+        .header {
+            display: table;
+            width: 100%;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #d8e0ea;
+        }
+
+        .header-left,
+        .header-right {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .header-right {
+            width: 222px;
+            text-align: right;
+            color: #526174;
+            font-size: 9px;
+        }
+
+        .brand {
+            color: #0f766e;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        h1 {
+            margin: 0;
+            color: #101827;
+            font-size: 25px;
+            line-height: 1.06;
+            letter-spacing: -0.4px;
+        }
+
+        .subtitle {
+            margin-top: 6px;
+            color: #5d6b7b;
+            font-size: 10px;
+        }
+
+        .meta-line {
+            margin-bottom: 4px;
+        }
+
+        .meta-line strong {
+            color: #172033;
+        }
+
+        .classification {
+            display: inline-block;
+            margin-top: 7px;
+            padding: 5px 9px;
+            border: 1px solid #b6d8d2;
+            background: #ecfdf5;
+            color: #0f766e;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+        }
+
+        .notice {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-left: 4px solid #f59e0b;
+            background: #fffbeb;
+            color: #7c4a03;
+            font-size: 10px;
+        }
+
+        .summary {
+            display: table;
+            width: 100%;
+            margin-top: 12px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .score-card,
+        .summary-card {
+            display: table-cell;
+            vertical-align: top;
+            border: 1px solid #d8e0ea;
+            background: #f8fafc;
+        }
+
+        .score-card {
+            width: 200px;
+            padding: 14px;
+            border-right: none;
+        }
+
+        .summary-card {
+            padding: 14px 16px;
+        }
+
+        .eyebrow {
+            color: #64748b;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
+        }
+
+        .score {
+            margin-top: 6px;
+            color: #0f766e;
+            font-size: 54px;
+            line-height: 0.95;
+            font-weight: 800;
+        }
+
+        .score-status {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background: #e0f2fe;
+            color: #075985;
+            font-weight: 700;
+            font-size: 8px;
+            text-transform: uppercase;
+        }
+
+        .summary-title {
+            margin: 0 0 8px;
+            color: #172033;
+            font-size: 14px;
+        }
+
+        .summary-text {
+            margin: 0;
+            color: #475569;
+            font-size: 10px;
+        }
+
+        .note {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #d8e0ea;
+            color: #475569;
+            font-size: 9px;
+        }
+
+        .kpis {
+            display: table;
+            width: 100%;
+            margin-top: 10px;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+        }
+
+        .kpi {
+            display: table-cell;
+            padding: 10px 8px;
+            border: 1px solid #d8e0ea;
+            background: #ffffff;
+            text-align: center;
+        }
+
+        .kpi-value {
+            color: #172033;
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .kpi-label {
+            margin-top: 6px;
+            color: #64748b;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .section {
+            margin-top: 12px;
+            page-break-inside: avoid;
+        }
+
+        .section-head {
+            display: table;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .section-title,
+        .section-meta {
+            display: table-cell;
+            vertical-align: bottom;
+        }
+
+        .section-title {
+            color: #172033;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .section-title span {
+            display: inline-block;
+            width: 4px;
+            height: 11px;
+            margin-right: 8px;
+            background: #0f766e;
+            vertical-align: -2px;
+        }
+
+        .section-meta {
+            text-align: right;
+            color: #64748b;
+            font-size: 8px;
+        }
+
+        .grid-2 {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+        }
+
+        .panel {
+            display: table-cell;
+            width: 50%;
+            padding: 10px;
+            border: 1px solid #d8e0ea;
+            background: #ffffff;
+            vertical-align: top;
+        }
+
+        .severity-row,
+        .metric-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .sev-label,
+        .metric-label {
+            display: table-cell;
+            width: 76px;
+            color: #334155;
+            font-weight: 700;
+            font-size: 9px;
+            vertical-align: middle;
+        }
+
+        .bar-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .bar-bg {
+            width: 100%;
+            height: 7px;
+            background: #e9eef5;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 7px;
+        }
+
+        .count {
+            display: table-cell;
+            width: 30px;
+            text-align: right;
+            color: #172033;
+            font-weight: 800;
+            font-size: 9px;
+            vertical-align: middle;
+        }
+
+        table.data {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table.data th {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #d8e0ea;
+            padding: 6px 7px;
+            font-size: 8px;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        table.data td {
+            border: 1px solid #d8e0ea;
+            padding: 7px;
+            color: #334155;
+            font-size: 9px;
+            vertical-align: top;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .muted {
+            color: #64748b;
+        }
+
+        .mono {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 8px;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 5px;
+            font-size: 7px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border: 1px solid transparent;
+        }
+
+        .pill-critical { color: #991b1b; background: #fee2e2; border-color: #fecaca; }
+        .pill-high { color: #9a3412; background: #ffedd5; border-color: #fed7aa; }
+        .pill-medium { color: #854d0e; background: #fef3c7; border-color: #fde68a; }
+        .pill-low { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
+        .pill-info { color: #075985; background: #e0f2fe; border-color: #bae6fd; }
+
+        .timeline-item {
+            position: relative;
+            padding: 0 0 10px 14px;
+            border-left: 2px solid #cbd5e1;
+        }
+
+        .timeline-item:before {
+            content: "";
+            position: absolute;
+            left: -5px;
+            top: 2px;
+            width: 8px;
+            height: 8px;
+            background: #0f766e;
+        }
+
+        .timeline-title {
+            color: #172033;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .timeline-meta {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 8px;
+        }
+
+        .recommendations {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+        }
+
+        .rec {
+            display: table-cell;
+            padding: 10px;
+            border: 1px solid #d8e0ea;
+            background: #f8fafc;
+            vertical-align: top;
+        }
+
+        .rec-priority {
+            color: #0f766e;
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .rec-title {
+            color: #172033;
+            font-size: 10px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .rec-body {
+            color: #475569;
+            font-size: 8px;
+            line-height: 1.45;
+        }
+
+        .footer {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #d8e0ea;
+            display: table;
+            width: 100%;
+            color: #64748b;
+            font-size: 8px;
+        }
+
+        .footer span {
+            display: table-cell;
+        }
+
+        .footer span:last-child {
+            text-align: right;
+        }
+
         @media print {
-            body {
-                background: white;
-            }
-            .a4-page {
-                margin: 0;
-                box-shadow: none;
-                padding: 12mm 18mm 10mm 18mm;
-            }
-            .break-inside-avoid {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-        }
-
-        /* Custom utilities */
-        .tracking-tight {
-            letter-spacing: -0.3px;
+            body { background: #ffffff; }
+            .page { margin: 0; box-shadow: none; overflow: visible; }
+            .section, .panel, .rec, .kpi, .score-card, .summary-card { break-inside: avoid; page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -91,319 +499,250 @@
     $agentCoverage = $safeStats['agents'] > 0 ? (int) round(($safeStats['online_agents'] / $safeStats['agents']) * 100) : 0;
     $periodLabel = ucwords(str_replace('_', ' ', $period ?? 'last_30_days'));
     $sevClass = fn ($severity) => match (strtolower((string) $severity)) {
-        'critical' => 'bg-red-100 text-red-800 border-red-200',
-        'high' => 'bg-orange-100 text-orange-800 border-orange-200',
-        'medium' => 'bg-amber-100 text-amber-800 border-amber-200',
-        'low' => 'bg-green-100 text-green-800 border-green-200',
-        default => 'bg-slate-100 text-slate-700 border-slate-200',
+        'critical' => 'pill-critical',
+        'high' => 'pill-high',
+        'medium' => 'pill-medium',
+        'low' => 'pill-low',
+        default => 'pill-info',
     };
 
     $vulnCollection = collect($vulnerabilities ?? [])->take(5);
     $incidentCollection = collect($incidents ?? [])->take(4);
 @endphp
 
-<div class="a4-page">
-    <!-- Top accent bar -->
-    <div class="h-1.5 bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-600 mb-5 -mt-[12mm] w-[calc(100%+36mm)] ml-[-18mm]"></div>
+<div class="page">
+    <div class="top-bar"></div>
 
-    <!-- Header -->
-    <div class="flex justify-between items-start mb-5 pb-3 border-b border-slate-200">
-        <div class="flex-1">
-            <div class="text-teal-700 text-[11px] font-bold tracking-wider mb-1.5">ARMIous PROTECT</div>
-            <h1 class="text-[32px] font-black text-slate-900 tracking-tight leading-tight mb-1">SOC Executive Report</h1>
-            <p class="text-slate-500 text-[12px]">Security posture, threat activity & response summary</p>
+    <div class="header">
+        <div class="header-left">
+            <div class="brand">Armious Protect</div>
+            <h1>SOC Executive Report</h1>
+            <div class="subtitle">Security posture, threat activity, exposure, and response summary.</div>
         </div>
-        <div class="text-right">
-            <div class="text-[10px] text-slate-500 space-y-0.5">
-                <div><span class="font-semibold text-slate-700">Report ID</span> SOC-{{ now()->format('Ymd') }}</div>
-                <div><span class="font-semibold text-slate-700">Period</span> {{ $periodLabel }}</div>
-                <div><span class="font-semibold text-slate-700">Range</span> {{ $from ?? '-' }} → {{ $to ?? now()->format('Y-m-d') }}</div>
-                <div><span class="font-semibold text-slate-700">Generated</span> {{ $generatedAt ?? now()->format('Y-m-d H:i') }}</div>
-            </div>
-            <div class="mt-2 inline-block px-3 py-1 bg-teal-50 border border-teal-200 text-teal-700 text-[9px] font-bold tracking-wide">TLP:CLEAR · CONFIDENTIAL</div>
+        <div class="header-right">
+            <div class="meta-line"><strong>Report ID</strong> SOC-{{ now()->format('Ymd') }}</div>
+            <div class="meta-line"><strong>Period</strong> {{ $periodLabel }}</div>
+            <div class="meta-line"><strong>Range</strong> {{ $from ?? '-' }} -> {{ $to ?? now()->format('Y-m-d') }}</div>
+            <div class="meta-line"><strong>Generated</strong> {{ $generatedAt ?? now()->format('Y-m-d H:i') }}</div>
+            <div class="classification">TLP:CLEAR - CONFIDENTIAL</div>
         </div>
     </div>
 
     @if (!empty($mongoError))
-        <div class="mb-4 p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-800 text-[11px] rounded-r">
-            ⚠️ Data source warning: some telemetry could not be loaded. The report may be incomplete.
-        </div>
+        <div class="notice">Warning: some telemetry could not be loaded. The report may be incomplete.</div>
     @endif
 
-    <!-- Executive Summary Cards -->
-    <div class="flex gap-4 mb-5 break-inside-avoid">
-        <!-- Score Card -->
-        <div class="w-[200px] bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-xl p-4 flex-shrink-0">
-            <div class="text-[10px] font-bold text-slate-400 tracking-wide uppercase mb-2">Security Posture Index</div>
-            <div class="text-[62px] font-black text-teal-700 leading-none mb-1">{{ $overallScore }}</div>
-            <div class="inline-block px-2.5 py-1 bg-teal-100 text-teal-800 text-[10px] font-bold rounded-full">{{ $scoreStatus }}</div>
+    <div class="summary">
+        <div class="score-card">
+            <div class="eyebrow">Security Posture Index</div>
+            <div class="score">{{ $overallScore }}</div>
+            <div class="score-status">{{ $scoreStatus }}</div>
         </div>
-
-        <!-- Summary Card -->
-        <div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h2 class="text-[15px] font-bold text-slate-800 mb-2">Executive Summary</h2>
-            <p class="text-[11px] text-slate-600 leading-relaxed">
+        <div class="summary-card">
+            <h2 class="summary-title">Executive Summary</h2>
+            <p class="summary-text">
                 During {{ strtolower($periodLabel) }}, the SOC observed
-                <strong class="text-slate-800">{{ number_format($safeStats['alerts']) }}</strong> security signals,
-                <strong class="text-slate-800">{{ number_format($safeStats['incidents']) }}</strong> incidents, and
-                <strong class="text-slate-800">{{ number_format($safeStats['vulnerabilities']) }}</strong> vulnerabilities across
-                <strong class="text-slate-800">{{ number_format($safeStats['projects']) }}</strong> protected projects.
-                Current agent coverage is <strong class="text-slate-800">{{ $agentCoverage }}%</strong>
-                with <strong class="text-slate-800">{{ number_format($safeStats['online_agents']) }}</strong> online sensors.
+                <strong>{{ number_format($safeStats['alerts']) }}</strong> security signals,
+                <strong>{{ number_format($safeStats['incidents']) }}</strong> incidents, and
+                <strong>{{ number_format($safeStats['vulnerabilities']) }}</strong> vulnerabilities across
+                <strong>{{ number_format($safeStats['projects']) }}</strong> protected projects.
+                Current agent coverage is <strong>{{ $agentCoverage }}%</strong>
+                with <strong>{{ number_format($safeStats['online_agents']) }}</strong> online sensors.
             </p>
             @if (!empty($note))
-                <div class="mt-2 pt-2 border-t border-slate-200 text-[11px] text-slate-500">
-                    <span class="font-semibold">Analyst note:</span> {{ $note }}
-                </div>
+                <div class="note"><strong>Analyst note:</strong> {{ $note }}</div>
             @endif
         </div>
     </div>
 
-    <!-- KPI Grid -->
-    <div class="grid grid-cols-5 gap-3 mb-5 break-inside-avoid">
-        <div class="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-sm">
-            <div class="text-[26px] font-black text-slate-800">{{ number_format($safeStats['projects']) }}</div>
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Projects</div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-sm">
-            <div class="text-[26px] font-black text-slate-800">{{ number_format($safeStats['alerts']) }}</div>
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Signals</div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-sm">
-            <div class="text-[26px] font-black text-slate-800">{{ number_format($safeStats['incidents']) }}</div>
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Incidents</div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-sm">
-            <div class="text-[26px] font-black text-slate-800">{{ number_format($safeStats['vulnerabilities']) }}</div>
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Vulns</div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-sm">
-            <div class="text-[26px] font-black text-slate-800">{{ number_format($safeStats['agents']) }}</div>
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Sensors</div>
-        </div>
+    <div class="kpis">
+        <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['projects']) }}</div><div class="kpi-label">Projects</div></div>
+        <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['alerts']) }}</div><div class="kpi-label">Signals</div></div>
+        <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['incidents']) }}</div><div class="kpi-label">Incidents</div></div>
+        <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['vulnerabilities']) }}</div><div class="kpi-label">Vulnerabilities</div></div>
+        <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['agents']) }}</div><div class="kpi-label">Sensors</div></div>
     </div>
 
-    <!-- Two Column Section -->
-    <div class="grid grid-cols-2 gap-4 mb-5 break-inside-avoid">
-        <!-- Risk Distribution -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-2">
-                    <div class="w-1 h-5 bg-teal-600 rounded"></div>
-                    <h3 class="text-[13px] font-bold text-slate-800">Risk Distribution</h3>
+    <div class="section">
+        <div class="grid-2">
+            <div class="panel">
+                <div class="section-head">
+                    <div class="section-title"><span></span>Risk Distribution</div>
+                    <div class="section-meta">Alerts by severity</div>
                 </div>
-                <span class="text-[9px] text-slate-400">Alerts by severity</span>
-            </div>
-            <div class="space-y-3">
-                @foreach([['label'=>'Critical','color'=>'red-600','bg'=>'red-100','value'=>$critical],['label'=>'High','color'=>'orange-600','bg'=>'orange-100','value'=>$high],['label'=>'Medium','color'=>'amber-600','bg'=>'amber-100','value'=>$medium],['label'=>'Low','color'=>'green-600','bg'=>'green-100','value'=>$low]] as $sev)
-                <div>
-                    <div class="flex justify-between text-[10px] font-semibold mb-1">
-                        <span class="text-{{ $sev['color'] }}">{{ $sev['label'] }}</span>
-                        <span class="text-slate-600">{{ $sev['value'] }}</span>
+                @foreach([
+                    ['label' => 'Critical', 'value' => $critical, 'color' => '#dc2626', 'pill' => 'pill-critical'],
+                    ['label' => 'High', 'value' => $high, 'color' => '#ea580c', 'pill' => 'pill-high'],
+                    ['label' => 'Medium', 'value' => $medium, 'color' => '#d97706', 'pill' => 'pill-medium'],
+                    ['label' => 'Low', 'value' => $low, 'color' => '#16a34a', 'pill' => 'pill-low'],
+                ] as $sev)
+                    <div class="severity-row">
+                        <div class="sev-label" style="color: {{ $sev['color'] }};">{{ $sev['label'] }}</div>
+                        <div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width: {{ round(($sev['value'] / $totalSeverity) * 100) }}%; background: {{ $sev['color'] }};"></div></div></div>
+                        <div class="count">{{ $sev['value'] }}</div>
                     </div>
-                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-{{ $sev['color'] }} rounded-full" style="width: {{ $totalSeverity > 0 ? round(($sev['value'] / $totalSeverity) * 100) : 0 }}%"></div>
-                    </div>
-                </div>
                 @endforeach
             </div>
-        </div>
 
-        <!-- Operational Metrics -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-2">
-                    <div class="w-1 h-5 bg-teal-600 rounded"></div>
-                    <h3 class="text-[13px] font-bold text-slate-800">Operational Metrics</h3>
+            <div class="panel">
+                <div class="section-head">
+                    <div class="section-title"><span></span>Operational Metrics</div>
+                    <div class="section-meta">SOC readiness</div>
                 </div>
-                <span class="text-[9px] text-slate-400">SOC readiness</span>
-            </div>
-            <div class="space-y-3">
-                @foreach([['label'=>'Agent coverage','value'=>$agentCoverage,'unit'=>'%','color'=>'teal'],['label'=>'Open incidents','value'=>min(100, $safeStats['open_incidents'] * 12),'color'=>'orange'],['label'=>'Open vulns','value'=>min(100, $safeStats['open_vulnerabilities'] * 2),'color'=>'blue'],['label'=>'Offline agents','value'=>min(100, $safeStats['offline_agents'] * 8),'color'=>'slate']] as $metric)
-                <div>
-                    <div class="flex justify-between text-[10px] font-semibold mb-1">
-                        <span class="text-slate-700">{{ $metric['label'] }}</span>
-                        <span class="text-slate-600">{{ $metric['value'] }}{{ $metric['unit'] ?? '' }}</span>
+                @foreach([
+                    ['label' => 'Agent coverage', 'value' => $agentCoverage, 'unit' => '%', 'color' => '#0f766e'],
+                    ['label' => 'Open incidents', 'value' => min(100, $safeStats['open_incidents'] * 12), 'unit' => '', 'color' => '#ea580c'],
+                    ['label' => 'Open vulns', 'value' => min(100, $safeStats['open_vulnerabilities'] * 2), 'unit' => '', 'color' => '#0284c7'],
+                    ['label' => 'Offline agents', 'value' => min(100, $safeStats['offline_agents'] * 8), 'unit' => '', 'color' => '#64748b'],
+                ] as $metric)
+                    <div class="metric-row">
+                        <div class="metric-label">{{ $metric['label'] }}</div>
+                        <div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width: {{ $metric['value'] }}%; background: {{ $metric['color'] }};"></div></div></div>
+                        <div class="count">{{ $metric['value'] }}{{ $metric['unit'] }}</div>
                     </div>
-                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-{{ $metric['color'] }}-500 rounded-full" style="width: {{ $metric['value'] }}%"></div>
-                    </div>
-                </div>
                 @endforeach
             </div>
         </div>
     </div>
 
-    <!-- Top Risk Projects -->
-    <div class="mb-5 break-inside-avoid">
-        <div class="flex items-center gap-2 mb-3">
-            <div class="w-1 h-5 bg-teal-600 rounded"></div>
-            <h3 class="text-[13px] font-bold text-slate-800">Top Risk Projects</h3>
-            <span class="text-[9px] text-slate-400 ml-auto">Ranked by risk score</span>
+    <div class="section">
+        <div class="section-head">
+            <div class="section-title"><span></span>Top Risk Projects</div>
+            <div class="section-meta">Ranked by risk score</div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-[10px] border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200">
-                        <th class="text-left p-2 font-semibold text-slate-500">#</th>
-                        <th class="text-left p-2 font-semibold text-slate-500">Project</th>
-                        <th class="text-left p-2 font-semibold text-slate-500">Client / Domain</th>
-                        <th class="text-left p-2 font-semibold text-slate-500">Score</th>
-                        <th class="text-left p-2 font-semibold text-slate-500">Risk</th>
-                        <th class="text-left p-2 font-semibold text-slate-500">Activity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($scoreCollection->take(6) as $project)
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="p-2 text-slate-500">{{ $loop->iteration }}</td>
-                        <td class="p-2 font-semibold text-slate-800">{{ $project->name ?? 'Unnamed project' }}</td>
-                        <td class="p-2">
-                            <div>{{ $project->client->company_name ?? 'Unassigned' }}</div>
-                            <div class="text-[9px] font-mono text-slate-400">{{ $project->domain ?? '-' }}</div>
-                        </td>
-                        <td class="p-2 font-bold text-slate-800">{{ (int) ($project->soc_score ?? 0) }}</td>
-                        <td class="p-2">
-                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold {{ $sevClass($project->soc_risk ?? 'medium') }}">
-                                {{ $project->soc_risk ?? 'medium' }}
-                            </span>
-                        </td>
-                        <td class="p-2 font-mono text-[9px] text-slate-500">
-                            A: {{ (int) ($project->alerts_count ?? 0) }} / I: {{ (int) ($project->incidents_count ?? 0) }} / V: {{ (int) ($project->vulnerabilities_count ?? 0) }}
-                        </td>
-                    </tr>
-                    @empty
+        <table class="data">
+            <thead>
+                <tr>
+                    <th style="width: 6%;">#</th>
+                    <th style="width: 28%;">Project</th>
+                    <th style="width: 22%;">Client / Domain</th>
+                    <th style="width: 10%;">Score</th>
+                    <th style="width: 12%;">Risk</th>
+                    <th style="width: 22%;">Activity</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($scoreCollection->take(6) as $project)
                     <tr>
-                        <td colspan="6" class="p-3 text-center text-slate-400">No project risk data available</td>
+                        <td>{{ $loop->iteration }}</td>
+                        <td><strong>{{ $project->name ?? 'Unnamed project' }}</strong></td>
+                        <td>
+                            {{ $project->client->company_name ?? 'Unassigned' }}<br>
+                            <span class="mono muted">{{ $project->domain ?? '-' }}</span>
+                        </td>
+                        <td><strong>{{ (int) ($project->soc_score ?? 0) }}</strong></td>
+                        <td><span class="pill {{ $sevClass($project->soc_risk ?? 'medium') }}">{{ $project->soc_risk ?? 'medium' }}</span></td>
+                        <td class="mono">
+                            A: {{ (int) ($project->alerts_count ?? 0) }} | I: {{ (int) ($project->incidents_count ?? 0) }} | V: {{ (int) ($project->vulnerabilities_count ?? 0) }}
+                        </td>
                     </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                @empty
+                    <tr>
+                        <td colspan="6" class="muted">No project risk data available for this period.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 
-    <!-- Active Exposures & Recent Incidents -->
-    <div class="grid grid-cols-2 gap-4 mb-5 break-inside-avoid">
-        <!-- Active Exposures -->
-        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div class="flex justify-between items-center p-3 border-b border-slate-200 bg-slate-50">
-                <div class="flex items-center gap-2">
-                    <div class="w-1 h-5 bg-teal-600 rounded"></div>
-                    <h3 class="text-[12px] font-bold text-slate-800">Active Exposures</h3>
+    <div class="section">
+        <div class="grid-2">
+            <div class="panel">
+                <div class="section-head">
+                    <div class="section-title"><span></span>Active Exposures</div>
+                    <div class="section-meta">Top findings</div>
                 </div>
-                <span class="text-[9px] text-slate-400">Top findings</span>
+                <table class="data">
+                    <thead>
+                        <tr>
+                            <th>Finding</th>
+                            <th style="width: 24%;">Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($vulnCollection as $vuln)
+                            <tr>
+                                <td>
+                                    <strong>{{ $vuln->name ?? $vuln->title ?? 'Unnamed finding' }}</strong><br>
+                                    <span class="mono muted">{{ $vuln->site_url ?? $vuln->url ?? 'unknown asset' }}</span>
+                                </td>
+                                <td><span class="pill {{ $sevClass($vuln->severity ?? 'low') }}">{{ $vuln->severity ?? 'low' }}</span></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="2" class="muted">No vulnerabilities detected in this period.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            <div class="divide-y divide-slate-100">
-                @forelse($vulnCollection as $vuln)
-                <div class="p-3">
-                    <div class="font-semibold text-[11px] text-slate-800">{{ $vuln->name ?? $vuln->title ?? 'Unnamed finding' }}</div>
-                    <div class="text-[9px] font-mono text-slate-400 mt-0.5">{{ $vuln->site_url ?? $vuln->url ?? 'unknown asset' }}</div>
-                    <div class="mt-1.5">
-                        <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold {{ $sevClass($vuln->severity ?? 'low') }}">
-                            {{ $vuln->severity ?? 'low' }}
-                        </span>
-                    </div>
-                </div>
-                @empty
-                <div class="p-4 text-center text-slate-400 text-[11px]">No vulnerabilities detected</div>
-                @endforelse
-            </div>
-        </div>
 
-        <!-- Recent Incidents -->
-        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div class="flex justify-between items-center p-3 border-b border-slate-200 bg-slate-50">
-                <div class="flex items-center gap-2">
-                    <div class="w-1 h-5 bg-teal-600 rounded"></div>
-                    <h3 class="text-[12px] font-bold text-slate-800">Recent Incidents</h3>
+            <div class="panel">
+                <div class="section-head">
+                    <div class="section-title"><span></span>Recent Incidents</div>
+                    <div class="section-meta">SOC timeline</div>
                 </div>
-                <span class="text-[9px] text-slate-400">SOC timeline</span>
-            </div>
-            <div class="divide-y divide-slate-100">
                 @forelse($incidentCollection as $incident)
-                <div class="p-3">
-                    <div class="font-semibold text-[11px] text-slate-800">{{ $incident->event ?? $incident->incident_key ?? 'Security event' }}</div>
-                    <div class="text-[9px] text-slate-500 mt-1">
-                        {{ $incident->site_url ?? $incident->ip ?? 'asset' }}
-                        <span class="mx-1">·</span>
-                        <span class="uppercase">{{ $incident->severity ?? 'medium' }}</span>
-                        <span class="mx-1">·</span>
-                        <span>{{ $incident->status ?? 'active' }}</span>
+                    <div class="timeline-item">
+                        <div class="timeline-title">{{ $incident->event ?? $incident->incident_key ?? 'Security event' }}</div>
+                        <div class="timeline-meta">
+                            {{ $incident->site_url ?? $incident->ip ?? 'asset' }} | {{ strtoupper($incident->severity ?? 'medium') }} | {{ $incident->status ?? 'active' }}
+                        </div>
                     </div>
-                </div>
                 @empty
-                <div class="p-4 text-center text-slate-400 text-[11px]">No recent incidents recorded</div>
+                    <div class="timeline-item">
+                        <div class="timeline-title">No recent incidents</div>
+                        <div class="timeline-meta">No incident activity was recorded for this reporting period.</div>
+                    </div>
                 @endforelse
             </div>
         </div>
     </div>
 
-    <!-- Exposure Summary KPIs -->
-    <div class="mb-5 break-inside-avoid">
-        <div class="flex items-center gap-2 mb-3">
-            <div class="w-1 h-5 bg-teal-600 rounded"></div>
-            <h3 class="text-[13px] font-bold text-slate-800">Exposure Summary</h3>
-            <span class="text-[9px] text-slate-400 ml-auto">Vulnerability & asset telemetry</span>
+    <div class="section">
+        <div class="section-head">
+            <div class="section-title"><span></span>Exposure Summary</div>
+            <div class="section-meta">Vulnerability and asset telemetry</div>
         </div>
-        <div class="grid grid-cols-5 gap-3">
-            <div class="bg-gradient-to-br from-red-50 to-white border border-red-200 rounded-lg p-2.5 text-center">
-                <div class="text-[22px] font-black text-red-700">{{ number_format($safeStats['critical_vulnerabilities']) }}</div>
-                <div class="text-[8px] font-bold text-red-600 uppercase tracking-wide">Critical Vulns</div>
+        <div class="kpis" style="margin-top:0;">
+            <div class="kpi"><div class="kpi-value" style="color:#991b1b;">{{ number_format($safeStats['critical_vulnerabilities']) }}</div><div class="kpi-label">Critical Vulns</div></div>
+            <div class="kpi"><div class="kpi-value" style="color:#9a3412;">{{ number_format($safeStats['high_vulnerabilities']) }}</div><div class="kpi-label">High Vulns</div></div>
+            <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['open_vulnerabilities']) }}</div><div class="kpi-label">Open Vulns</div></div>
+            <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['inventories']) }}</div><div class="kpi-label">Assets</div></div>
+            <div class="kpi"><div class="kpi-value">{{ number_format($safeStats['offline_agents']) }}</div><div class="kpi-label">Offline Sensors</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-head">
+            <div class="section-title"><span></span>Recommended Actions</div>
+            <div class="section-meta">Prioritized for remediation</div>
+        </div>
+        <div class="recommendations">
+            <div class="rec">
+                <div class="rec-priority">P1 Immediate</div>
+                <div class="rec-title">Resolve critical exposure</div>
+                <div class="rec-body">Patch or isolate critical vulnerabilities and validate fixes with a follow-up scan.</div>
             </div>
-            <div class="bg-gradient-to-br from-orange-50 to-white border border-orange-200 rounded-lg p-2.5 text-center">
-                <div class="text-[22px] font-black text-orange-700">{{ number_format($safeStats['high_vulnerabilities']) }}</div>
-                <div class="text-[8px] font-bold text-orange-600 uppercase tracking-wide">High Vulns</div>
+            <div class="rec">
+                <div class="rec-priority">P2 High</div>
+                <div class="rec-title">Close active incidents</div>
+                <div class="rec-body">Prioritize open incidents with high severity and document containment status.</div>
             </div>
-            <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-center">
-                <div class="text-[22px] font-black text-slate-700">{{ number_format($safeStats['open_vulnerabilities']) }}</div>
-                <div class="text-[8px] font-bold text-slate-500 uppercase tracking-wide">Open Vulns</div>
+            <div class="rec">
+                <div class="rec-priority">P3 Coverage</div>
+                <div class="rec-title">Restore sensor health</div>
+                <div class="rec-body">Reconnect offline agents and verify telemetry ingestion across critical projects.</div>
             </div>
-            <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-center">
-                <div class="text-[22px] font-black text-slate-700">{{ number_format($safeStats['inventories']) }}</div>
-                <div class="text-[8px] font-bold text-slate-500 uppercase tracking-wide">Assets</div>
-            </div>
-            <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-center">
-                <div class="text-[22px] font-black text-slate-700">{{ number_format($safeStats['offline_agents']) }}</div>
-                <div class="text-[8px] font-bold text-slate-500 uppercase tracking-wide">Offline Sensors</div>
+            <div class="rec">
+                <div class="rec-priority">P4 Governance</div>
+                <div class="rec-title">Review risk owners</div>
+                <div class="rec-body">Assign owners for top-risk projects and track remediation progress weekly.</div>
             </div>
         </div>
     </div>
 
-    <!-- Recommended Actions -->
-    <div class="break-inside-avoid">
-        <div class="flex items-center gap-2 mb-3">
-            <div class="w-1 h-5 bg-teal-600 rounded"></div>
-            <h3 class="text-[13px] font-bold text-slate-800">Recommended Actions</h3>
-            <span class="text-[9px] text-slate-400 ml-auto">Prioritized for remediation</span>
-        </div>
-        <div class="grid grid-cols-4 gap-3">
-            <div class="bg-red-50 border border-red-200 rounded-xl p-3">
-                <div class="text-[10px] font-black text-red-700 uppercase tracking-wider mb-1.5">P1 · Immediate</div>
-                <div class="text-[12px] font-bold text-slate-800 mb-1">Resolve critical exposure</div>
-                <div class="text-[9px] text-slate-600 leading-relaxed">Patch or isolate critical vulnerabilities and validate fixes with a follow-up scan.</div>
-            </div>
-            <div class="bg-orange-50 border border-orange-200 rounded-xl p-3">
-                <div class="text-[10px] font-black text-orange-700 uppercase tracking-wider mb-1.5">P2 · High</div>
-                <div class="text-[12px] font-bold text-slate-800 mb-1">Close active incidents</div>
-                <div class="text-[9px] text-slate-600 leading-relaxed">Prioritize open incidents with high severity and document containment status.</div>
-            </div>
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3">
-                <div class="text-[10px] font-black text-blue-700 uppercase tracking-wider mb-1.5">P3 · Coverage</div>
-                <div class="text-[12px] font-bold text-slate-800 mb-1">Restore sensor health</div>
-                <div class="text-[9px] text-slate-600 leading-relaxed">Reconnect offline agents and verify telemetry ingestion across critical projects.</div>
-            </div>
-            <div class="bg-slate-100 border border-slate-200 rounded-xl p-3">
-                <div class="text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1.5">P4 · Governance</div>
-                <div class="text-[12px] font-bold text-slate-800 mb-1">Review risk owners</div>
-                <div class="text-[9px] text-slate-600 leading-relaxed">Assign owners for top-risk projects and track remediation progress weekly.</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="mt-5 pt-3 border-t border-slate-200 flex justify-between text-[8px] text-slate-400">
-        <span>Armious Protect SOC · Executive security report</span>
-        <span>Confidential · Generated {{ now()->format('Y-m-d') }} · Page 1</span>
+    <div class="footer">
+        <span>Armious Protect SOC - Executive security report</span>
+        <span>Confidential - Page 1</span>
     </div>
 </div>
 </body>
