@@ -80,13 +80,6 @@
                                     <span class="inline-flex h-7 items-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-200 shadow-sm">
                                         Internal Admin
                                     </span>
-                                    <span class="inline-flex h-7 items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 text-[11px] font-black text-emerald-200 shadow-sm">
-                                        <span class="relative flex h-1.5 w-1.5">
-                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                                            <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                                        </span>
-                                        Cloudflare API Ready
-                                    </span>
                                 </div>
                                 <h1 class="mt-5 bg-gradient-to-r from-white via-cyan-100 to-slate-300 bg-clip-text text-3xl font-black tracking-tight text-transparent md:text-4xl">
                                     Cloudflare WordPress Protection
@@ -111,13 +104,6 @@
                                         class="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-800/50 pl-11 pr-4 text-sm font-medium text-slate-200 outline-none transition-all duration-200 placeholder:text-slate-500 focus:border-cyan-400/50 focus:bg-slate-800/80 focus:ring-2 focus:ring-cyan-400/20"
                                     >
                                 </div>
-                                <button @click="openCloudflareConfig(selectedSite || sites[0])" class="group relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 px-4 text-sm font-black text-slate-950 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/25 hover:scale-[1.02] active:scale-[0.98]">
-                                    <svg class="h-4 w-4 transition-transform group-hover:rotate-90 duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path d="M12 5v14"></path>
-                                        <path d="M5 12h14"></path>
-                                    </svg>
-                                    Connect Cloudflare API
-                                </button>
                             </div>
                         </div>
                         
