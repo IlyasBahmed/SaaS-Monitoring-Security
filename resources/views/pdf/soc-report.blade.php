@@ -25,6 +25,8 @@
             margin: 0 auto;
             background: #ffffff;
             padding: 15mm 14mm 12mm;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .top-rule {
@@ -119,6 +121,8 @@
             vertical-align: top;
             border: 1px solid #d8e0ea;
             background: #f8fafc;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .score-card {
@@ -193,6 +197,8 @@
             border: 1px solid #d8e0ea;
             background: #ffffff;
             text-align: center;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .kpi-value {
@@ -263,6 +269,8 @@
             border: 1px solid #d8e0ea;
             background: #ffffff;
             vertical-align: top;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .severity-row,
@@ -280,11 +288,14 @@
             font-weight: 700;
             font-size: 10px;
             vertical-align: middle;
+            word-break: break-word;
         }
 
         .bar-cell {
             display: table-cell;
             vertical-align: middle;
+            overflow: hidden;
+            max-width: 100%;
         }
 
         .bar-bg {
@@ -332,6 +343,8 @@
             font-size: 10px;
             vertical-align: top;
             word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .muted {
@@ -341,6 +354,8 @@
         .mono {
             font-family: Consolas, "Courier New", monospace;
             font-size: 9px;
+            word-break: break-all;
+            overflow-wrap: break-word;
         }
 
         .pill {
@@ -363,6 +378,9 @@
             position: relative;
             padding: 0 0 12px 15px;
             border-left: 2px solid #cbd5e1;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow: hidden;
         }
 
         .timeline-item:before {
@@ -401,6 +419,10 @@
             border: 1px solid #d8e0ea;
             background: #f8fafc;
             vertical-align: top;
+            box-sizing: border-box;
+            overflow: hidden;
+            word-wrap: break-word;
+            word-break: break-word;
         }
 
         .rec-priority {

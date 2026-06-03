@@ -50,6 +50,126 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
 
+    Route::get('/search', function (Request $request) {
+        $query = trim((string) $request->query('q', ''));
+        $user = $request->user();
+        $isClient = strtolower(trim((string) ($user?->role ?? ''))) === 'client';
+        $client = clients::query()
+            ->where('user_id', $user?->id)
+            ->first();
+
+        $projectQuery = Projects::query()->with('client');
+        if ($isClient && $client) {
+            $projectQuery->where('client_id', $client->id);
+        }
+
+        $projects = $query !== ''
+            ? $projectQuery->latest()->get()->filter(function (Projects $project) use ($query) {
+                $haystack = strtolower(implode(' ', [
+                    (string) $project->name,
+                    (string) $project->domain,
+                    (string) ($project->client?->company_name ?? ''),
+                    (string) $project->status,
+                ]));
+
+                return str_contains($haystack, strtolower($query));
+            })->values()
+            : collect();
+
+        $projectIds = $projects->pluck('id')->map(fn ($id) => (int) $id)->values();
+
+        $alerts = $query !== ''
+            ? collect(rescue(function () use ($projectIds, $query, $isClient, $client) {
+                $base = Alert::query()->with('project.client');
+
+                if ($isClient && $client) {
+                    $base->whereIn('project_id', $client->projects()->pluck('id')->map(fn ($id) => (int) $id)->all());
+                }
+
+                return $base->latest('detected_at')->latest('created_at')->take(120)->get()->filter(function ($alert) use ($query) {
+                    $haystack = strtolower(implode(' ', [
+                        (string) ($alert->title ?? ''),
+                        (string) ($alert->severity ?? ''),
+                        (string) ($alert->project?->name ?? ''),
+                        (string) ($alert->project?->domain ?? ''),
+                    ]));
+
+                    return str_contains($haystack, strtolower($query));
+                })->values();
+            }, collect(), false))
+            : collect();
+
+        $incidents = $query !== ''
+            ? collect(rescue(function () use ($projectIds, $query, $isClient, $client) {
+                $base = Incident::query();
+
+                if ($isClient && $client) {
+                    $base->whereIn('project_id', $client->projects()->pluck('id')->map(fn ($id) => (int) $id)->all());
+                }
+
+                return $base->latest('event_created_at')->latest('created_at')->take(120)->get()->filter(function (Incident $incident) use ($query) {
+                    $haystack = strtolower(implode(' ', [
+                        (string) ($incident->event ?? ''),
+                        (string) ($incident->category ?? ''),
+                        (string) ($incident->site_url ?? ''),
+                        (string) ($incident->ip ?? ''),
+                        (string) ($incident->severity ?? ''),
+                        (string) ($incident->status ?? ''),
+                    ]));
+
+                    return str_contains($haystack, strtolower($query));
+                })->values();
+            }, collect(), false))
+            : collect();
+
+        $clientsResults = collect();
+        if (! $isClient && $query !== '') {
+            $clientsResults = clients::query()
+                ->withCount('projects')
+                ->latest()
+                ->get()
+                ->filter(function (clients $clientRow) use ($query) {
+                    $haystack = strtolower(implode(' ', [
+                        (string) $clientRow->company_name,
+                        (string) $clientRow->email,
+                        (string) $clientRow->phone,
+                        (string) $clientRow->status,
+                    ]));
+
+                    return str_contains($haystack, strtolower($query));
+                })
+                ->values();
+        }
+
+        $usersResults = collect();
+        if (! $isClient && $query !== '') {
+            $usersResults = User::query()
+                ->latest()
+                ->take(120)
+                ->get()
+                ->filter(function (User $userRow) use ($query) {
+                    $haystack = strtolower(implode(' ', [
+                        (string) $userRow->name,
+                        (string) $userRow->email,
+                        (string) $userRow->role,
+                    ]));
+
+                    return str_contains($haystack, strtolower($query));
+                })
+                ->values();
+        }
+
+        return view('pages.search', [
+            'query' => $query,
+            'client' => $client,
+            'projects' => $projects,
+            'alerts' => $alerts,
+            'incidents' => $incidents,
+            'clientsResults' => $clientsResults,
+            'usersResults' => $usersResults,
+        ]);
+    })->name('search');
+
     Route::get('/settings', function () {
         return redirect()->route('profile.edit');
     })->name('settings.index');
@@ -273,7 +393,15 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
 
         $projectIds = $projects
             ->pluck('id')
+            ->filter()
+            ->values();
+
+        $projectIdsInt = $projectIds
             ->map(fn ($id) => (int) $id)
+            ->values();
+
+        $projectIdsString = $projectIds
+            ->map(fn ($id) => (string) $id)
             ->values();
 
         $scoreAlerts = collect(rescue(
