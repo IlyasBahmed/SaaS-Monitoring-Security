@@ -12,7 +12,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions
 # PHP extensions
 RUN install-php-extensions \
     pdo_pgsql \
-    mongodb \
+    mongodb-1.21.2 \
     zip \
     bcmath \
     pcntl \
@@ -68,7 +68,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions
 # Install PHP extensions
 RUN install-php-extensions \
     pdo_pgsql \
-    mongodb \
+    mongodb-1.21.2 \
     zip \
     bcmath \
     pcntl \
