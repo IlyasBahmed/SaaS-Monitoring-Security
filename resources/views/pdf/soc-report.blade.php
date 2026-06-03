@@ -26,7 +26,7 @@
             background: #ffffff;
             padding: 15mm 14mm 12mm;
             box-sizing: border-box;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .top-rule {
@@ -259,7 +259,7 @@
             display: table;
             width: 100%;
             border-collapse: separate;
-            border-spacing: 10px 0;
+            border-spacing: 8px 0;
         }
 
         .panel {
@@ -410,7 +410,7 @@
             width: 100%;
             table-layout: fixed;
             border-collapse: separate;
-            border-spacing: 10px 0;
+            border-spacing: 8px 0;
         }
 
         .rec {
@@ -466,7 +466,8 @@
 
         @media print {
             body { background: #ffffff; }
-            .page { margin: 0; box-shadow: none; }
+            .page { margin: 0; box-shadow: none; overflow: visible; }
+            .section, .panel, .rec, .kpi, .score-card, .summary-card { break-inside: avoid; page-break-inside: avoid; }
         }
     </style>
 </head>
