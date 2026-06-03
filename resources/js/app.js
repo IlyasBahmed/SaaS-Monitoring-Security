@@ -10,6 +10,7 @@ const themeToggle = document.querySelector('#themeToggle');
 const isSoundEnabled = () => localStorage.getItem('soundEnabled') !== 'off';
 
 let audioContext = null;
+let lastUiSoundAt = 0;
 
 function getAudioContext() {
     if (!window.AudioContext && !window.webkitAudioContext) {
@@ -51,6 +52,17 @@ function playUiSound() {
     oscillator.stop(now + 0.1);
 }
 
+function triggerUiSound() {
+    const now = Date.now();
+
+    if (now - lastUiSoundAt < 80) {
+        return;
+    }
+
+    lastUiSoundAt = now;
+    playUiSound();
+}
+
 function getPreferredTheme() {
     const savedTheme = localStorage.getItem('theme');
 
@@ -84,14 +96,32 @@ themeToggle?.addEventListener('click', () => {
 });
 
 document.addEventListener('click', (event) => {
-    const target = event.target.closest('[data-sound="click"]');
+    const target = event.target.closest('button, a[href], summary, [role="button"], [data-sound="click"]');
 
-    if (!target || !isSoundEnabled()) {
+    if (!target || !isSoundEnabled() || target.closest('[data-sound="off"]')) {
         return;
     }
 
-    playUiSound();
-});
+    triggerUiSound();
+}, true);
+
+document.addEventListener('submit', (event) => {
+    if (!isSoundEnabled() || event.target.closest('[data-sound="off"]')) {
+        return;
+    }
+
+    triggerUiSound();
+}, true);
+
+document.addEventListener('change', (event) => {
+    const target = event.target.closest('input, select, textarea');
+
+    if (!target || !isSoundEnabled() || target.closest('[data-sound="off"]')) {
+        return;
+    }
+
+    triggerUiSound();
+}, true);
 
 const heroCanvas = document.querySelector('#hero3d');
 
