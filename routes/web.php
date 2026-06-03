@@ -895,23 +895,51 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             ->get();
 
         return response()->streamDownload(function () use ($projects) {
-            $file = fopen('php://output', 'w');
+            $cell = fn ($value) => e((string) ($value ?? '-'));
+            $generatedAt = now()->format('Y-m-d H:i');
+            $onlineAgents = $projects->filter(fn (Projects $project) => $project->agents->contains(
+                fn ($agent) => strtolower((string) ($agent->pivot->status ?? '')) === 'online'
+            ))->count();
+            $cloudflareLinked = $projects->filter(
+                fn (Projects $project) => (bool) ($project->cloudflare_enabled ?? false) || filled($project->cloudflare_zone_id ?? null)
+            )->count();
 
-            fputcsv($file, [
-                'Name',
-                'Domain',
-                'IP Address',
-                'Client',
-                'Type',
-                'Status',
-                'SSL Status',
-                'Cloudflare SSL',
-                'Cloudflare',
-                'Agent',
-                'Created At',
-            ]);
+            echo "\xEF\xBB\xBF";
+            echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+            echo '<style>
+                body { font-family: Arial, sans-serif; color: #172033; }
+                table { border-collapse: collapse; width: 100%; }
+                .title { background: #0f172a; color: #ffffff; font-size: 22px; font-weight: 700; }
+                .subtitle { background: #e0f2fe; color: #0f172a; font-weight: 600; }
+                .meta { background: #f8fafc; color: #475569; }
+                th { background: #164e63; color: #ffffff; font-weight: 700; text-align: left; }
+                th, td { border: 1px solid #cbd5e1; padding: 8px 10px; vertical-align: top; }
+                .badge-good { background: #dcfce7; color: #166534; font-weight: 700; }
+                .badge-warn { background: #fef3c7; color: #92400e; font-weight: 700; }
+                .badge-bad { background: #fee2e2; color: #991b1b; font-weight: 700; }
+                .mono { mso-number-format:"\@"; }
+            </style></head><body>';
+            echo '<table>';
+            echo '<tr><td colspan="12" class="title">Projects Security Export</td></tr>';
+            echo '<tr><td colspan="12" class="subtitle">Armious Protect - Excel fiche</td></tr>';
+            echo '<tr class="meta"><td colspan="3">Generated at: '.$cell($generatedAt).'</td><td colspan="3">Projects: '.$cell($projects->count()).'</td><td colspan="3">Cloudflare linked: '.$cell($cloudflareLinked).'</td><td colspan="3">Online agents: '.$cell($onlineAgents).'</td></tr>';
+            echo '<tr><td colspan="12"></td></tr>';
+            echo '<tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Domain</th>
+                <th>IP Address</th>
+                <th>Client</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>SSL Status</th>
+                <th>Cloudflare SSL</th>
+                <th>Cloudflare</th>
+                <th>Agent</th>
+                <th>Created At</th>
+            </tr>';
 
-            foreach ($projects as $project) {
+            foreach ($projects as $index => $project) {
                 $cloudflare = (bool) ($project->cloudflare_enabled ?? false) || filled($project->cloudflare_zone_id ?? null);
                 $settings = is_array($project->cloudflare_settings ?? null) ? $project->cloudflare_settings : [];
                 $sslMode = $settings['ssl_mode'] ?? null;
@@ -934,24 +962,29 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
                     fn ($agent) => strtolower((string) ($agent->pivot->status ?? '')) === 'online'
                 );
 
-                fputcsv($file, [
-                    $project->name,
-                    $project->domain,
-                    $project->ip_address,
-                    $project->client->company_name ?? '-',
-                    Projects::normalizeProjectType($project->stack ?? ''),
-                    $project->status,
-                    $sslStatus,
-                    $sslLabel,
-                    $cloudflare ? 'Active' : 'Not linked',
-                    $agentOnline ? 'Online' : 'Offline',
-                    optional($project->created_at)->format('Y-m-d H:i:s'),
-                ]);
+                $sslClass = in_array($sslStatus, ['Valid'], true) ? 'badge-good' : ($sslStatus === 'Weak' || $sslStatus === 'Unknown' ? 'badge-warn' : 'badge-bad');
+                $cloudflareClass = $cloudflare ? 'badge-good' : 'badge-warn';
+                $agentClass = $agentOnline ? 'badge-good' : 'badge-bad';
+
+                echo '<tr>';
+                echo '<td>'.$cell($index + 1).'</td>';
+                echo '<td>'.$cell($project->name).'</td>';
+                echo '<td class="mono">'.$cell($project->domain).'</td>';
+                echo '<td class="mono">'.$cell($project->ip_address).'</td>';
+                echo '<td>'.$cell($project->client->company_name ?? '-').'</td>';
+                echo '<td>'.$cell(Projects::normalizeProjectType($project->stack ?? '')).'</td>';
+                echo '<td>'.$cell($project->status).'</td>';
+                echo '<td class="'.$sslClass.'">'.$cell($sslStatus).'</td>';
+                echo '<td>'.$cell($sslLabel).'</td>';
+                echo '<td class="'.$cloudflareClass.'">'.$cell($cloudflare ? 'Active' : 'Not linked').'</td>';
+                echo '<td class="'.$agentClass.'">'.$cell($agentOnline ? 'Online' : 'Offline').'</td>';
+                echo '<td class="mono">'.$cell(optional($project->created_at)->format('Y-m-d H:i:s')).'</td>';
+                echo '</tr>';
             }
 
-            fclose($file);
-        }, 'projects-export-'.now()->format('Y-m-d-His').'.csv', [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            echo '</table></body></html>';
+        }, 'projects-export-'.now()->format('Y-m-d-His').'.xls', [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
         ]);
     })->name('projects.export');
 
@@ -1264,21 +1297,45 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         ));
 
         return response()->streamDownload(function () use ($clientRows, $scoreAlerts, $scoreIncidents, $scoreVulnerabilities, $scoreHealthReports) {
-            $file = fopen('php://output', 'w');
+            $cell = fn ($value) => e((string) ($value ?? '-'));
+            $generatedAt = now()->format('Y-m-d H:i');
+            $activeClients = $clientRows->where('status', 'active')->count();
+            $totalProjects = $clientRows->sum(fn (clients $client) => $client->projects_count ?? $client->projects->count());
 
-            fputcsv($file, [
-                'Company',
-                'Email',
-                'Phone',
-                'Address',
-                'Status',
-                'Projects',
-                'Global Score',
-                'Score Label',
-                'Created At',
-            ]);
+            echo "\xEF\xBB\xBF";
+            echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+            echo '<style>
+                body { font-family: Arial, sans-serif; color: #172033; }
+                table { border-collapse: collapse; width: 100%; }
+                .title { background: #0f172a; color: #ffffff; font-size: 22px; font-weight: 700; }
+                .subtitle { background: #e0f2fe; color: #0f172a; font-weight: 600; }
+                .meta { background: #f8fafc; color: #475569; }
+                th { background: #164e63; color: #ffffff; font-weight: 700; text-align: left; }
+                th, td { border: 1px solid #cbd5e1; padding: 8px 10px; vertical-align: top; }
+                .badge-good { background: #dcfce7; color: #166534; font-weight: 700; }
+                .badge-warn { background: #fef3c7; color: #92400e; font-weight: 700; }
+                .badge-bad { background: #fee2e2; color: #991b1b; font-weight: 700; }
+                .mono { mso-number-format:"\@"; }
+            </style></head><body>';
+            echo '<table>';
+            echo '<tr><td colspan="10" class="title">Clients Security Export</td></tr>';
+            echo '<tr><td colspan="10" class="subtitle">Armious Protect - Excel fiche</td></tr>';
+            echo '<tr class="meta"><td colspan="3">Generated at: '.$cell($generatedAt).'</td><td colspan="2">Clients: '.$cell($clientRows->count()).'</td><td colspan="2">Active: '.$cell($activeClients).'</td><td colspan="3">Projects: '.$cell($totalProjects).'</td></tr>';
+            echo '<tr><td colspan="10"></td></tr>';
+            echo '<tr>
+                <th>#</th>
+                <th>Company</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Status</th>
+                <th>Projects</th>
+                <th>Global Score</th>
+                <th>Score Label</th>
+                <th>Created At</th>
+            </tr>';
 
-            foreach ($clientRows as $client) {
+            foreach ($clientRows as $index => $client) {
                 $projectScores = $client->projects
                     ->map(fn (Projects $project) => ProjectSecurityScore::forProject($project, $scoreAlerts, $scoreIncidents, $scoreVulnerabilities, $scoreHealthReports));
                 $globalScore = $projectScores->count()
@@ -1288,22 +1345,26 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
                     ? ($globalScore >= 85 ? 'Healthy' : ($globalScore >= 65 ? 'Review' : ($globalScore >= 40 ? 'Risk' : 'Critical')))
                     : 'No Projects';
 
-                fputcsv($file, [
-                    $client->company_name,
-                    $client->email,
-                    $client->phone,
-                    $client->address,
-                    $client->status,
-                    $client->projects_count ?? $client->projects->count(),
-                    $globalScore,
-                    $scoreLabel,
-                    optional($client->created_at)->format('Y-m-d H:i:s'),
-                ]);
+                $statusClass = strtolower((string) $client->status) === 'active' ? 'badge-good' : 'badge-warn';
+                $scoreClass = $globalScore >= 85 ? 'badge-good' : ($globalScore >= 40 ? 'badge-warn' : 'badge-bad');
+
+                echo '<tr>';
+                echo '<td>'.$cell($index + 1).'</td>';
+                echo '<td>'.$cell($client->company_name).'</td>';
+                echo '<td class="mono">'.$cell($client->email).'</td>';
+                echo '<td class="mono">'.$cell($client->phone).'</td>';
+                echo '<td>'.$cell($client->address).'</td>';
+                echo '<td class="'.$statusClass.'">'.$cell($client->status).'</td>';
+                echo '<td>'.$cell($client->projects_count ?? $client->projects->count()).'</td>';
+                echo '<td class="'.$scoreClass.'">'.$cell($globalScore).'</td>';
+                echo '<td class="'.$scoreClass.'">'.$cell($scoreLabel).'</td>';
+                echo '<td class="mono">'.$cell(optional($client->created_at)->format('Y-m-d H:i:s')).'</td>';
+                echo '</tr>';
             }
 
-            fclose($file);
-        }, 'clients-export-'.now()->format('Y-m-d-His').'.csv', [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            echo '</table></body></html>';
+        }, 'clients-export-'.now()->format('Y-m-d-His').'.xls', [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
         ]);
     })->name('clients.export');
 

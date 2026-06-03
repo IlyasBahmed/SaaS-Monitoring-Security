@@ -14,22 +14,6 @@
         </svg>
     </button>
 
-    {{-- Context --}}
-    <div class="min-w-0 flex-1">
-        <div class="inline-flex max-w-full items-center gap-3 rounded-2xl border border-cyan-100 bg-white/85 px-4 py-2.5 shadow-lg shadow-slate-200/50 backdrop-blur-xl dark:border-cyan-400/10 dark:bg-[#020617]/85 dark:shadow-none">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-300">
-                <svg class="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3 4.5 6.5v5.7c0 4.2 2.9 8 7.5 9.3 4.6-1.3 7.5-5.1 7.5-9.3V6.5L12 3z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.5 12 1.7 1.7 3.6-4"/>
-                </svg>
-            </div>
-            <div class="min-w-0">
-                <p class="truncate text-sm font-bold text-slate-900 dark:text-white">Security Command Center</p>
-                <p class="truncate text-xs font-medium text-slate-500 dark:text-slate-500">{{ now()->format('D, M j') }}</p>
-            </div>
-        </div>
-    </div>
-
     {{-- Right --}}
     <div class="flex shrink-0 items-center gap-2 sm:gap-3">
 
