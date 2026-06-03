@@ -7,6 +7,7 @@
 
     <button type="button"
             @click="sidebarOpen = true"
+            data-sound="click"
             aria-label="Open navigation"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-100 bg-white text-slate-500 shadow-lg shadow-slate-200/50 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 md:hidden dark:border-cyan-400/10 dark:bg-[#020617] dark:text-slate-400 dark:shadow-none dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/5 dark:hover:text-cyan-300">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
@@ -46,9 +47,29 @@
             System Active
         </div>
 
+        {{-- Sound --}}
+        <button type="button"
+                data-sound="click"
+                @click="soundEnabled = !soundEnabled"
+                :aria-pressed="soundEnabled ? 'true' : 'false'"
+                :aria-label="soundEnabled ? 'Mute sound' : 'Enable sound'"
+                class="group h-11 w-11 flex items-center justify-center rounded-2xl border border-cyan-100 bg-white text-slate-500 shadow-lg shadow-slate-200/50 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-cyan-400/10 dark:bg-[#020617] dark:text-slate-400 dark:shadow-none dark:hover:border-cyan-400/30 dark:hover:bg-cyan-400/5 dark:hover:text-cyan-300">
+            <svg x-show="soundEnabled" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5 6.5 9.5H3v5h3.5L11 19V5Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.5 8.5a4 4 0 0 1 0 7"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.5 6.5a7 7 0 0 1 0 11"/>
+            </svg>
+            <svg x-show="!soundEnabled" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5 6.5 9.5H3v5h3.5L11 19V5Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="m16 9 5 5"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 9-5 5"/>
+            </svg>
+        </button>
+
         {{-- Theme --}}
         <button type="button"
                 @click="darkMode = !darkMode"
+                data-sound="click"
                 :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'"
                 class="group h-11 w-11 flex items-center justify-center rounded-2xl border border-cyan-100 bg-white text-slate-500
                        shadow-lg shadow-slate-200/50 transition
@@ -68,6 +89,7 @@
         <div x-data="{ open: false }" class="relative">
             <button type="button"
                     @click="open = !open"
+                    data-sound="click"
                     :aria-expanded="open"
                     aria-label="Open alerts"
                     class="relative group h-11 w-11 flex items-center justify-center rounded-2xl bg-white border border-cyan-100
@@ -152,6 +174,7 @@
         <div x-data="{ open: false }" class="relative">
             <button type="button"
                     @click="open = !open"
+                    data-sound="click"
                     class="group flex items-center gap-3 rounded-2xl bg-white border border-cyan-100 px-3 py-2
                            shadow-lg shadow-slate-200/50 transition
                            hover:border-cyan-300 hover:bg-cyan-50 hover:shadow-cyan-100/60

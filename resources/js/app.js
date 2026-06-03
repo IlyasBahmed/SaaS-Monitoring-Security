@@ -7,6 +7,50 @@ Alpine.start();
 const html = document.documentElement;
 const themeToggle = document.querySelector('#themeToggle');
 
+const isSoundEnabled = () => localStorage.getItem('soundEnabled') !== 'off';
+
+let audioContext = null;
+
+function getAudioContext() {
+    if (!window.AudioContext && !window.webkitAudioContext) {
+        return null;
+    }
+
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    return audioContext;
+}
+
+function playUiSound() {
+    if (!isSoundEnabled()) return;
+
+    const context = getAudioContext();
+    if (!context) return;
+
+    if (context.state === 'suspended') {
+        context.resume().catch(() => {});
+    }
+
+    const now = context.currentTime;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(760, now);
+    oscillator.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.03, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.1);
+}
+
 function getPreferredTheme() {
     const savedTheme = localStorage.getItem('theme');
 
@@ -30,12 +74,23 @@ function applyTheme(theme) {
 }
 
 applyTheme(getPreferredTheme());
+html.dataset.soundEnabled = isSoundEnabled() ? 'on' : 'off';
 
 themeToggle?.addEventListener('click', () => {
     const nextTheme = html.classList.contains('dark') ? 'light' : 'dark';
 
     localStorage.setItem('theme', nextTheme);
     applyTheme(nextTheme);
+});
+
+document.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-sound="click"]');
+
+    if (!target || !isSoundEnabled()) {
+        return;
+    }
+
+    playUiSound();
 });
 
 const heroCanvas = document.querySelector('#hero3d');

@@ -14,11 +14,21 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body
-    x-data="{ darkMode: document.documentElement.classList.contains('dark'), sidebarOpen: false }"
+    x-data="{
+        darkMode: document.documentElement.classList.contains('dark'),
+        sidebarOpen: false,
+        soundEnabled: localStorage.getItem('soundEnabled') !== 'off',
+    }"
     x-init="$watch('darkMode', value => {
         document.documentElement.classList.toggle('dark', value);
         localStorage.setItem('theme', value ? 'dark' : 'light');
-    })"
+    });
+    $watch('soundEnabled', value => {
+        localStorage.setItem('soundEnabled', value ? 'on' : 'off');
+        document.documentElement.dataset.soundEnabled = value ? 'on' : 'off';
+        window.dispatchEvent(new CustomEvent('cybershield:sound-change', { detail: { enabled: value } }));
+    });
+    document.documentElement.dataset.soundEnabled = soundEnabled ? 'on' : 'off';"
     @keydown.escape.window="sidebarOpen = false"
     class="overflow-x-hidden bg-slate-100 text-slate-950 transition-colors duration-300 dark:bg-[#020617] dark:text-white"
 >

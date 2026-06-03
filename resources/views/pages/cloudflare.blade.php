@@ -50,6 +50,68 @@
         ->values();
 @endphp
 
+@push('styles')
+    <style>
+        html:not(.dark) .cloudflare-shell {
+            color: #0f172a;
+            background:
+                radial-gradient(circle at 12% 10%, rgba(34, 211, 238, 0.10), transparent 24rem),
+                radial-gradient(circle at 88% 0%, rgba(16, 185, 129, 0.10), transparent 20rem),
+                linear-gradient(180deg, #f8fafc 0%, #eef4fb 100%);
+        }
+
+        html:not(.dark) .cloudflare-shell :where(.bg-slate-950, .bg-slate-900, .bg-black\/30, .bg-black\/20, .bg-slate-900\/80, .bg-slate-900\/90, .bg-slate-800\/50) {
+            background-color: rgba(255, 255, 255, 0.94) !important;
+            background-image: none !important;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(.border-slate-800, .border-slate-800\/70, .border-slate-800\/60, .border-slate-800\/50) {
+            border-color: rgba(203, 213, 225, 0.96) !important;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(.text-slate-200, .text-slate-300, .text-slate-400, .text-slate-500) {
+            color: #475569 !important;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(.text-white) {
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(input, select, textarea) {
+            background-color: #ffffff !important;
+            border-color: rgba(203, 213, 225, 0.95) !important;
+            color: #0f172a !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+        }
+
+        html:not(.dark) .cloudflare-shell :where(input, select, textarea)::placeholder {
+            color: #94a3b8;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(table thead) {
+            background: rgba(248, 250, 252, 0.96) !important;
+            color: #475569 !important;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(th, td) {
+            border-color: rgba(226, 232, 240, 1) !important;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(.shadow-2xl, .shadow-xl, .shadow-lg) {
+            box-shadow: 0 22px 48px -36px rgba(15, 23, 42, 0.30) !important;
+        }
+
+        html:not(.dark) .cloudflare-shell :where(.hover\:bg-white\/5:hover, .hover\:bg-white\/10:hover) {
+            background-color: rgba(241, 245, 249, 0.95) !important;
+        }
+
+        html:not(.dark) .cloudflare-shell .soft-light-panel {
+            background: rgba(255, 255, 255, 0.96) !important;
+            border-color: rgba(203, 213, 225, 0.96) !important;
+        }
+    </style>
+@endpush
+
 <x-dashboard-layout>
     <div
         x-data="wordpressCloudflareDashboard({
@@ -59,7 +121,7 @@
         })"
         x-init="init()"
         @keydown.escape.window="closeModal(); closeCloudflareConfig(); openMenu = null"
-        class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-200"
+        class="cloudflare-shell min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-200"
     >
         <main class="mx-auto max-w-[1680px] px-4 py-6 lg:px-6">
             

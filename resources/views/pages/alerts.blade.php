@@ -11,9 +11,69 @@
         ];
     @endphp
 
-    <div x-data="alertsPage()" x-init="init()" class="space-y-6">
+    @push('styles')
+        <style>
+            html:not(.dark) .alerts-shell {
+                color: #0f172a;
+                background:
+                    radial-gradient(circle at 12% 10%, rgba(14, 165, 233, 0.10), transparent 24rem),
+                    radial-gradient(circle at 88% 0%, rgba(251, 191, 36, 0.10), transparent 20rem),
+                    linear-gradient(180deg, #f8fafc 0%, #eef4fb 100%);
+            }
+
+            html:not(.dark) .alerts-shell :where(header, .alerts-table, .alerts-detail, .alerts-filters) {
+                background: rgba(255, 255, 255, 0.92) !important;
+                border-color: rgba(203, 213, 225, 0.9) !important;
+                box-shadow: 0 24px 50px -36px rgba(15, 23, 42, 0.28);
+            }
+
+            html:not(.dark) .alerts-shell :where(.border-white\/5, .border-white\/10, .divide-white\/5 > :not([hidden]) ~ :not([hidden])) {
+                border-color: rgba(226, 232, 240, 1) !important;
+            }
+
+            html:not(.dark) .alerts-shell :where(.bg-\[\#0a0f1a\], .bg-\[\#05080f\], .bg-black\/30, .bg-white\/5) {
+                background-color: rgba(255, 255, 255, 0.92) !important;
+            }
+
+            html:not(.dark) .alerts-shell :where(.text-white) {
+                color: #0f172a !important;
+            }
+
+            html:not(.dark) .alerts-shell :where(.text-slate-500, .text-slate-400, .text-slate-600) {
+                color: #64748b !important;
+            }
+
+            html:not(.dark) .alerts-shell :where(input, select) {
+                background-color: #ffffff !important;
+                border-color: rgba(203, 213, 225, 0.95) !important;
+                color: #0f172a !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+            }
+
+            html:not(.dark) .alerts-shell :where(input, select)::placeholder {
+                color: #94a3b8;
+            }
+
+            html:not(.dark) .alerts-shell .alerts-row:hover,
+            html:not(.dark) .alerts-shell .alerts-table tbody tr:hover {
+                background: rgba(236, 253, 255, 0.78) !important;
+            }
+
+            html:not(.dark) .alerts-shell .alerts-sidebar-card {
+                background: rgba(255, 255, 255, 0.96) !important;
+                border-color: rgba(203, 213, 225, 0.9) !important;
+                box-shadow: 0 20px 42px -32px rgba(15, 23, 42, 0.32);
+            }
+
+            html:not(.dark) .alerts-shell .alerts-soft-panel {
+                background: rgba(248, 250, 252, 0.94) !important;
+            }
+        </style>
+    @endpush
+
+    <div x-data="alertsPage()" x-init="init()" class="alerts-shell space-y-6">
         {{-- Header --}}
-        <header class="overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#0a0f1a] to-[#05080f] shadow-2xl shadow-black/30">
+        <header class="alerts-header overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#0a0f1a] to-[#05080f] shadow-2xl shadow-black/30">
             <div class="grid gap-0 xl:grid-cols-[1fr_600px]">
                 <div class="border-b border-white/5 p-6 xl:border-b-0 xl:border-r">
                     <div class="flex flex-wrap items-center gap-2">
@@ -94,9 +154,9 @@
         {{-- Main Content --}}
         <section class="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_480px]">
             {{-- Alerts Table --}}
-            <div class="min-w-0 overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#0a0f1a] to-[#05080f] shadow-2xl shadow-black/30">
+            <div class="alerts-table min-w-0 overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#0a0f1a] to-[#05080f] shadow-2xl shadow-black/30">
                 {{-- Filters Bar --}}
-                <div class="border-b border-white/5 p-5">
+                <div class="alerts-filters border-b border-white/5 p-5">
                     <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
                         <div class="relative">
                             <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -275,7 +335,7 @@
             </div>
 
             {{-- Details Panel --}}
-            <aside class="min-w-0 rounded-2xl border border-white/5 bg-gradient-to-br from-[#0a0f1a] to-[#05080f] shadow-2xl shadow-black/30 2xl:sticky 2xl:top-6 2xl:self-start">
+            <aside class="alerts-detail min-w-0 rounded-2xl border border-white/5 bg-gradient-to-br from-[#0a0f1a] to-[#05080f] shadow-2xl shadow-black/30 2xl:sticky 2xl:top-6 2xl:self-start">
                 <template x-if="selectedAlert">
                     <div>
                         {{-- Header --}}
