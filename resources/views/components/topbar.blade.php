@@ -14,6 +14,23 @@
         </svg>
     </button>
 
+    <form class="hidden min-w-0 flex-1 md:flex md:max-w-xl">
+        <label class="relative flex w-full items-center">
+            <span class="pointer-events-none absolute left-4 flex h-4 w-4 items-center justify-center text-slate-400">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"/>
+                </svg>
+            </span>
+            <input
+                type="search"
+                name="q"
+                placeholder="Search alerts, projects, users..."
+                aria-label="Search"
+                class="h-11 w-full rounded-2xl border border-cyan-100 bg-white pl-11 pr-4 text-sm text-slate-700 shadow-lg shadow-slate-200/40 outline-none transition placeholder:text-slate-400 focus:border-cyan-300 focus:bg-cyan-50/30 focus:ring-2 focus:ring-cyan-200/40 dark:border-cyan-400/10 dark:bg-[#020617] dark:text-slate-100 dark:shadow-none dark:placeholder:text-slate-500 dark:focus:border-cyan-400/30 dark:focus:bg-[#07111f] dark:focus:ring-cyan-400/10"
+            />
+        </label>
+    </form>
+
     {{-- Right --}}
     <div class="flex shrink-0 items-center gap-2 sm:gap-3">
 

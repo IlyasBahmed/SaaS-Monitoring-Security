@@ -24,19 +24,19 @@
             min-height: 297mm;
             margin: 0 auto;
             background: #ffffff;
-            padding: 18mm 16mm 14mm;
+            padding: 15mm 14mm 12mm;
         }
 
         .top-rule {
             height: 5px;
             background: #0f766e;
-            margin: -18mm -16mm 14mm;
+            margin: -15mm -14mm 12mm;
         }
 
         .header {
             display: table;
             width: 100%;
-            padding-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #d8e0ea;
         }
 
@@ -108,7 +108,7 @@
         .executive {
             display: table;
             width: 100%;
-            margin-top: 18px;
+            margin-top: 14px;
             border-collapse: separate;
             border-spacing: 0;
         }
@@ -123,12 +123,12 @@
 
         .score-card {
             width: 230px;
-            padding: 18px;
+            padding: 16px;
             border-right: none;
         }
 
         .summary-card {
-            padding: 18px 20px;
+            padding: 16px 18px;
         }
 
         .eyebrow {
@@ -181,7 +181,7 @@
         .kpis {
             display: table;
             width: 100%;
-            margin-top: 14px;
+            margin-top: 12px;
             table-layout: fixed;
             border-collapse: separate;
             border-spacing: 8px 0;
@@ -212,7 +212,7 @@
         }
 
         .section {
-            margin-top: 20px;
+            margin-top: 16px;
             page-break-inside: avoid;
         }
 
@@ -259,7 +259,7 @@
         .panel {
             display: table-cell;
             width: 50%;
-            padding: 14px;
+            padding: 12px;
             border: 1px solid #d8e0ea;
             background: #ffffff;
             vertical-align: top;
@@ -425,7 +425,7 @@
         }
 
         .footer {
-            margin-top: 18px;
+            margin-top: 14px;
             padding-top: 10px;
             border-top: 1px solid #d8e0ea;
             display: table;

@@ -261,7 +261,7 @@
                                 <label class="block text-sm font-semibold text-slate-200 ml-1">
                                     <i class="fas fa-lock text-cyan-300 mr-1 text-xs"></i> Password
                                 </label>
-                                <a href="#" class="text-xs text-cyan-400 hover:text-cyan-300 transition underline-offset-2 hover:underline">Forgot?</a>
+                                <a href="{{ route('password.request') }}" class="text-xs text-cyan-400 hover:text-cyan-300 transition underline-offset-2 hover:underline">Forgot?</a>
                             </div>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
