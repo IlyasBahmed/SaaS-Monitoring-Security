@@ -1,58 +1,252 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# DevSecOps Security Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based security operations platform for monitoring client projects, WordPress assets, Cloudflare protection, alerts, incidents, and security reports from one dashboard.
 
-## About Laravel
+The application is built as a PFE/DevSecOps project and includes both an admin/SOC workspace and a client portal.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Role-based dashboards for administrators, SOC analysts, and clients.
+- Client and project management with project health, agent status, and security scoring.
+- Cloudflare integration for zone/project protection actions and status tracking.
+- Alert, incident, vulnerability, audit log, and health report models.
+- Client-facing project views with recent alerts, incidents, Cloudflare coverage, and security score.
+- Global and client security report request workflows.
+- User invitation and role management for platform operators.
+- Laravel Fortify/Breeze authentication with Sanctum support.
+- DevSecOps pipeline with tests, static analysis, dependency audit, secret scanning, container scanning, DAST, and deployment.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Tech Stack
 
-## Learning Laravel
+- PHP 8.3
+- Laravel 13
+- Laravel Fortify, Breeze, Sanctum
+- PostgreSQL for Docker deployments
+- SQLite for simple local development
+- MongoDB integration through `mongodb/laravel-mongodb`
+- Vite, Tailwind CSS, Alpine.js
+- Chart.js, GSAP, Three.js
+- Docker, Nginx, GitHub Actions
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Requirements
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.3+
+- Composer
+- Node.js 22+ and npm
+- SQLite, PostgreSQL, or another Laravel-supported database
+- Docker and Docker Compose for containerized development
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Local Setup
 
-## Agentic Development
+1. Install backend dependencies:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+   ```bash
+   composer install
+   ```
+
+2. Install frontend dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Create the environment file:
+
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+   PowerShell alternative:
+
+   ```powershell
+   Copy-Item .env.example .env
+   php artisan key:generate
+   ```
+
+4. Configure your database in `.env`.
+
+   For a quick SQLite setup:
+
+   ```env
+   DB_CONNECTION=sqlite
+   DB_DATABASE=database/database.sqlite
+   ```
+
+   Then create the SQLite file:
+
+   ```bash
+   touch database/database.sqlite
+   ```
+
+   PowerShell alternative:
+
+   ```powershell
+   New-Item database/database.sqlite -ItemType File -Force
+   ```
+
+5. Run migrations:
+
+   ```bash
+   php artisan migrate
+   ```
+
+6. Build frontend assets:
+
+   ```bash
+   npm run build
+   ```
+
+7. Start the application:
+
+   ```bash
+   php artisan serve
+   npm run dev
+   ```
+
+   Run these in two terminals, or use the one-command development script below.
+
+The app will usually be available at `http://127.0.0.1:8000`.
+
+## One-command Development
+
+The Composer `dev` script starts the Laravel server, queue listener, logs, and Vite together:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer run dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Docker Setup
 
-## Contributing
+The repository includes a Docker stack with:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Laravel app container
+- Nginx
+- PostgreSQL
+- MongoDB
+- Queue worker
 
-## Code of Conduct
+Start the stack:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+docker compose up -d --build
+```
 
-## Security Vulnerabilities
+Run migrations inside the app container:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+docker compose exec app php artisan migrate --force
+```
 
-## License
+The Nginx container exposes the application on port `80`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Environment Variables
+
+Important variables from `.env.example` and Docker configuration:
+
+```env
+APP_NAME="DevSecOps Security Platform"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=sqlite
+QUEUE_CONNECTION=database
+SESSION_DRIVER=database
+CACHE_STORE=database
+
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS=hello@example.com
+MAIL_FROM_NAME="${APP_NAME}"
+
+WPSCAN_API_TOKEN=
+CLOUDFLARE_API_BASE_URL=https://api.cloudflare.com/client/v4
+CLOUDFLARE_API_TOKEN=
+```
+
+Docker deployments also use PostgreSQL, MongoDB, Cloudflare, WPScan, mail, and optional AI provider variables such as `GROQ_API_KEY` and `GROQ_MODEL`.
+
+## Useful Commands
+
+```bash
+# Run tests
+php artisan test
+
+# Run the Composer test script
+composer run test
+
+# Static analysis
+vendor/bin/phpstan analyse --memory-limit=1G
+
+# Format PHP code
+vendor/bin/pint
+
+# Build frontend assets
+npm run build
+
+# Start Vite only
+npm run dev
+
+# Clear Laravel config cache
+php artisan config:clear
+```
+
+## Main Application Areas
+
+- `/dashboard` - admin/SOC overview.
+- `/client-dashboard` - client security overview.
+- `/client-projects` - client project inventory and posture.
+- `/projects` - project management.
+- `/clients` - client management.
+- `/alerts` - security alert triage.
+- `/reports` - report templates and report requests.
+- `/users-roles` - platform user and role management.
+- `/profile` - authenticated user profile settings.
+
+Most routes require authentication and verified access.
+
+## DevSecOps Pipeline
+
+The GitHub Actions workflow in `.github/workflows/devsecops.yml` runs:
+
+- Composer dependency installation
+- npm dependency installation
+- Vite build
+- Laravel migrations
+- PHPStan static analysis
+- PHPUnit/Laravel tests
+- Composer audit
+- Gitleaks secret scanning
+- Trivy Docker image scanning
+- OWASP ZAP baseline DAST scan
+- SSH-based deployment to a VM
+
+Required deployment and DAST secrets include:
+
+- `STAGING_URL`
+- `VM_IP`
+- `SSH_PRIVATE_KEY`
+- `GITHUB_TOKEN` is provided by GitHub Actions
+
+## Project Structure
+
+```text
+app/                  Laravel application code
+app/Http/Controllers  Dashboard, project, Cloudflare, agent, profile, and user controllers
+app/Models            Users, clients, projects, alerts, incidents, agents, reports, and security data
+database/migrations   Database schema
+resources/views       Blade pages and layouts
+routes                Web and authentication routes
+docker                Container support files
+nginx                 Nginx configuration
+terraform             Infrastructure files
+ansible               Configuration/deployment automation
+.github/workflows     CI/CD and DevSecOps pipeline
+```
+
+## Notes
+
+- Keep `.env` private and never commit real API tokens or credentials.
+- Use `.env.example` as the source of truth for required local configuration.
+- When using external integrations, configure Cloudflare and WPScan tokens before running related workflows.
+- Queue-backed features require a queue worker, either through `composer run dev` or the Docker `queue` service.
