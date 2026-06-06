@@ -579,7 +579,15 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
 
         $projectIds = $projects
             ->pluck('id')
+            ->filter()
+            ->values();
+
+        $projectIdsInt = $projectIds
             ->map(fn ($id) => (int) $id)
+            ->values();
+
+        $projectIdsString = $projectIds
+            ->map(fn ($id) => (string) $id)
             ->values();
 
         $projectsById = $projects->keyBy(fn (Projects $project) => (int) $project->id);

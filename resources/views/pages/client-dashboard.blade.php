@@ -47,7 +47,7 @@
                     <p class="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300">Client Dashboard</p>
                     <h1 class="mt-3 text-3xl font-black tracking-tight text-white">{{ $clientName }}</h1>
                     <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-400">
-                        A read-only security overview for your protected assets, active signals, and platform coverage.
+                        A read-onlyy security overview for your protected assets, active signals, and platform coverage.
                     </p>
 
                     <div class="mt-5 flex flex-wrap gap-2">
