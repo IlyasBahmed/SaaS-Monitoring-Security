@@ -580,7 +580,6 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         $projectIds = $projects
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
-            ->filter()
             ->values();
 
         $projectsById = $projects->keyBy(fn (Projects $project) => (int) $project->id);
@@ -595,21 +594,14 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             ])
             ->values();
 
-        $rawIncidents = $projectIds->isEmpty()
-            ? collect()
-            : collect(rescue(
-                function () use ($projectIds) {
-                    return Incident::query()
-                        ->whereIn('project_id', $projectIds->all())
-                        ->orderByDesc('event_created_at')
-                        ->orderByDesc('created_at')
-                        ->take(200)
-                        ->get();
-                },
-                collect(),
-                false
-            ));
-
+       $rawIncidents = $projectIds->isEmpty()
+    ? collect()
+    : Incident::query()
+        ->whereIn('project_id', $projectIds->map(fn($id) => (int) $id)->all())
+        ->orderByDesc('event_created_at')
+        ->orderByDesc('created_at')
+        ->take(200)
+        ->get();
         $parseDate = static function ($value): ?Carbon {
             if (blank($value)) {
                 return null;
