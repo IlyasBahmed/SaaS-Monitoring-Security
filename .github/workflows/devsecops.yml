@@ -174,9 +174,9 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: azureuser
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+
           script: |
             cd /opt/project
-            git fetch origin
-            git reset --hard origin/main
+            git pull origin main
             docker-compose down
             docker-compose up -d --build
