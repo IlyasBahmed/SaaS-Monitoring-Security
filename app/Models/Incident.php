@@ -34,6 +34,7 @@ class Incident extends Model
     ];
 
     protected $casts = [
+        'project_id' => 'integer',
         'target' => 'array',
         'metadata' => 'array',
         'assigned_at' => 'datetime',
