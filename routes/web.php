@@ -590,6 +590,11 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             ->map(fn ($id) => (string) $id)
             ->values();
 
+        $projectIdsForIncidentQuery = $projectIdsInt
+            ->merge($projectIdsString)
+            ->unique()
+            ->values();
+
         $projectsById = $projects->keyBy(fn (Projects $project) => (int) $project->id);
 
         $projectRows = $projects
@@ -605,15 +610,9 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         $rawIncidents = $projectIds->isEmpty()
             ? collect()
             : collect(rescue(
-                function () use ($projectIdsInt, $projectIdsString) {
+                function () use ($projectIdsForIncidentQuery) {
                     return Incident::query()
-                        ->where(function ($query) use ($projectIdsInt, $projectIdsString) {
-                            $query->whereIn('project_id', $projectIdsInt->all());
-
-                            if ($projectIdsString->isNotEmpty()) {
-                                $query->orWhereIn('project_id', $projectIdsString->all());
-                            }
-                        })
+                        ->whereIn('project_id', $projectIdsForIncidentQuery->all())
                         ->orderByDesc('event_created_at')
                         ->orderByDesc('created_at')
                         ->take(200)
