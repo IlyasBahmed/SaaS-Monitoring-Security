@@ -59,6 +59,7 @@ RUN npm run build
 # =========================
 FROM php:8.3-fpm-alpine
 
+
 # Installer PHP extensions helper
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
@@ -77,8 +78,8 @@ RUN install-php-extensions \
 RUN echo "expose_php = Off" > /usr/local/etc/php/conf.d/security.ini
 WORKDIR /var/www
 
-# # Copy project
-# COPY . .
+# Copy project
+COPY . .
 
 # Copy vendor from composer stage
 COPY --from=composer /app/vendor ./vendor
@@ -107,29 +108,3 @@ RUN php artisan config:clear && \
 EXPOSE 9000
 
 CMD ["php-fpm"]
-# FROM  php:8.3-fpm-alpine
-# ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-# RUN chmod +x /usr/local/bin/install-php-extensions
-
-# RUN install-php-extensions \
-#     pdo_pgsql \
-#     mongodb \
-#     zip \
-#     bcmath \
-#     pcntl \
-#     exif \
-#     intl \
-#     opcache
-
-# WORKDIR /var/www
-
-# COPY --from=composer /app/vendor ./vendor
-# COPY --from=node /app/public/build ./public/build
-
-# RUN mkdir -p storage bootstrap/cache \
-#     && chown -R www-data:www-data storage bootstrap/cache \
-#     && chmod -R 775 storage bootstrap/cache
-
-# EXPOSE 9000
-
-# CMD ["php-fpm"]
