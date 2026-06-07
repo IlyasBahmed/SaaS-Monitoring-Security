@@ -550,12 +550,10 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
 
     Route::get('/client-incidents', function () {
         $user = request()->user();
-        $client = clients::query()
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user?->id)
-                    ->orWhere('email', $user?->email);
-            })
-            ->first();
+       $client = clients::query()
+    ->where('user_id', $user?->id)
+    ->orWhere('email', $user?->email)
+    ->first();
 
         $emptyPayload = [
             'client' => $client,
@@ -662,7 +660,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
 
         $openRows = $incidentRows->reject(fn ($incident) => in_array($incident['status'], ['resolved', 'closed'], true));
         $latestIncident = $incidentRows->first();
-
+      
         return view('pages.client-incidents', [
             'client' => $client,
             'incidents' => $incidentRows,
