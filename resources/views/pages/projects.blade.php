@@ -28,7 +28,9 @@
             $projectPaginationStart = max(1, $projectPaginationPages - 2);
         }
 
-        $canManageProjects = ! in_array(strtolower(trim((string) (Auth::user()?->role ?? ''))), ['soc analyst'], true);
+        $currentRole = strtolower(trim((string) (Auth::user()?->role ?? '')));
+        $canManageProjects = ! in_array($currentRole, ['soc analyst'], true);
+        $canScanProjects = in_array($currentRole, ['super admin', 'admin', 'staff', 'soc analyst'], true);
 
         $projectFilterItems = $projects
             ->map(function ($project) use ($resolveProjectType) {
@@ -357,7 +359,7 @@
                                         </svg>
                                     </a>
 
-                                    @if ($canManageProjects)
+                                    @if ($canScanProjects)
                                         <form method="POST" action="{{ route('projects.vulnerability.scan', $project) }}" @submit="startScan({{ $project->id }})">
                                             @csrf
                                             <button type="submit"

@@ -23,6 +23,8 @@ class EnsureDashboardAccess
         'projects.index',
         'projects.show',
         'projects.realtime',
+        'projects.logs',
+        'projects.vulnerability.scan',
         'incidents.*',
         'alerts.*',
         'cloudflare.*',

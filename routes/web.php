@@ -10,6 +10,7 @@ use App\Http\Controllers\CloudflareProjectController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\Admin\GlobalReportController;
 use App\Models\agents;
+use App\Models\AgentLog;
 use App\Models\Alert;
 use App\Models\AuditLog;
 use App\Models\clients;
@@ -1323,6 +1324,153 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             'incidents' => $project->incidents()->count(),
         ]);
     })->name('projects.realtime');
+
+    Route::get('/projects/{project}/logs', function (Projects $project) {
+        $user = request()->user();
+        $role = str_replace('_', ' ', strtolower(trim((string) ($user?->role ?? ''))));
+        if (! $user || ! in_array($role, ['super admin', 'admin', 'staff', 'soc analyst'], true)) {
+            abort(403, 'Unauthorized to view project logs.');
+        }
+
+        $project->load('client');
+        $projectId = (int) $project->id;
+
+        $auditLogs = collect(rescue(
+            fn () => AuditLog::query()
+                ->where('project_id', $projectId)
+                ->orderBy('event_created_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->take(150)
+                ->get(),
+            collect(),
+            false
+        ));
+
+        $agentLogs = collect(rescue(
+            fn () => AgentLog::query()
+                ->where('project_id', $projectId)
+                ->orderBy('event_created_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->take(150)
+                ->get(),
+            collect(),
+            false
+        ));
+
+        $normalizeArray = static function ($value): array {
+            if (is_array($value)) {
+                return $value;
+            }
+
+            if (is_string($value) && trim($value) !== '') {
+                $decoded = json_decode($value, true);
+
+                return is_array($decoded) ? $decoded : [];
+            }
+
+            return [];
+        };
+
+        $labelFromPayload = null;
+        $labelFromPayload = function ($value, string $fallback = '-') use (&$labelFromPayload) {
+            if (is_array($value)) {
+                $label = $value['name']
+                    ?? $value['email']
+                    ?? $value['username']
+                    ?? $value['ip']
+                    ?? $value['ip_address']
+                    ?? $value['url']
+                    ?? $value['path']
+                    ?? $value['file']
+                    ?? $value['plugin']
+                    ?? $value['id']
+                    ?? $fallback;
+
+                return is_scalar($label) ? (string) $label : $fallback;
+            }
+
+            if (is_string($value) && trim($value) !== '') {
+                $decoded = json_decode($value, true);
+
+                return is_array($decoded)
+                    ? $labelFromPayload($decoded, $fallback)
+                    : $value;
+            }
+
+            if (is_scalar($value)) {
+                return (string) $value;
+            }
+
+            return $fallback;
+        };
+
+        $normalizeSeverity = static function ($value): string {
+            $severity = strtolower(trim((string) $value));
+
+            return match ($severity) {
+                'critical', 'high', 'medium', 'low', 'info' => $severity,
+                'fatal', 'emergency', 'alert' => 'critical',
+                'error' => 'high',
+                'warn', 'warning' => 'medium',
+                'notice', 'debug', 'informational' => 'info',
+                default => 'info',
+            };
+        };
+
+        $parseDate = static function ($value): ?Carbon {
+            if (blank($value)) {
+                return null;
+            }
+
+            return rescue(fn () => Carbon::parse($value), null, false);
+        };
+
+        $mapLog = static function ($log, string $source) use ($labelFromPayload, $normalizeArray, $normalizeSeverity, $parseDate) {
+            $event = filled($log->event ?? null) ? (string) $log->event : 'project_log';
+            $category = strtolower((string) ($log->category ?? ($source === 'Agent' ? 'agent' : 'audit')));
+            $createdAt = $parseDate($log->event_created_at ?? null)
+                ?? $parseDate($log->created_at ?? null);
+            $metadata = $normalizeArray($log->metadata ?? []);
+            $actor = $labelFromPayload($log->actor ?? null, $source);
+            $target = $labelFromPayload($log->target ?? null, '-');
+
+            return [
+                'id' => (string) ($log->getKey() ?? md5($source.$event.($createdAt?->timestamp ?? now()->timestamp))),
+                'source' => $source,
+                'category' => $category,
+                'category_label' => ucwords(str_replace('_', ' ', $category)),
+                'event_label' => ucwords(str_replace('_', ' ', $event)),
+                'severity' => $normalizeSeverity($log->severity ?? null),
+                'site_url' => $log->site_url ?: '-',
+                'ip' => $log->ip ?: '-',
+                'actor' => $actor,
+                'target' => $target,
+                'metadata' => $metadata,
+                'metadata_count' => count($metadata),
+                'created_timestamp' => $createdAt?->timestamp ?? 0,
+                'created_human' => $createdAt ? $createdAt->diffForHumans() : 'Recently',
+                'created_time' => $createdAt ? $createdAt->format('M d, H:i:s') : '-',
+            ];
+        };
+
+        $logs = $auditLogs
+            ->map(fn (AuditLog $log) => $mapLog($log, 'Audit'))
+            ->merge($agentLogs->map(fn (AgentLog $log) => $mapLog($log, 'Agent')))
+            ->sortByDesc('created_timestamp')
+            ->take(150)
+            ->values();
+
+        $stats = [
+            'total' => $logs->count(),
+            'critical' => $logs->where('severity', 'critical')->count(),
+            'high' => $logs->where('severity', 'high')->count(),
+            'audit' => $logs->where('source', 'Audit')->count(),
+            'agent' => $logs->where('source', 'Agent')->count(),
+            'latest_human' => $logs->first()['created_human'] ?? '-',
+        ];
+
+        return view('pages.projects-logs', compact('project', 'logs', 'stats'));
+    })->name('projects.logs');
 
     Route::get('/test-scan/{project}', [ProjectSecurityController::class, 'runVulnerabilityScan'])->middleware('auth');
 
