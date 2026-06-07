@@ -52,7 +52,6 @@ $clientDashboardUrl = route('client.dashboard');
 $clientItems = [
     ['label' => 'Dashboard', 'route' => 'client.dashboard', 'icon' => 'grid', 'badge' => null],
     ['label' => 'Projects / Sites', 'route' => 'client.projects', 'icon' => 'folder', 'badge' => null],
-    ['label' => 'Incidents', 'route' => 'client.incidents', 'icon' => 'alert', 'badge' => $openIncidentsCount, 'badgeColor' => 'red'],
     ['label' => 'Alerts', 'route' => 'client.alerts', 'icon' => 'bell', 'badge' => $openAlertsCount, 'badgeColor' => 'yellow'],
     ['label' => 'Reports', 'route' => 'client.reports.index', 'icon' => 'file', 'badge' => null],
     ['label' => 'Settings', 'route' => 'settings.index', 'icon' => 'user', 'badge' => null],
