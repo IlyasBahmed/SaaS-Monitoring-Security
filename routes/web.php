@@ -1223,7 +1223,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         // IDOR Protection: Verify user is admin/staff
         $user = request()->user();
         $role = str_replace('_', ' ', strtolower(trim((string) ($user?->role ?? ''))));
-        if (! $user || ! in_array($role, ['super admin', 'admin', 'staff', 'soc analyst'], true)) {
+        if (! $user || ! in_array($role, ['super admin', 'admin', 'staff'], true)) {
             abort(403, 'Unauthorized access to this project.');
         }
 
@@ -1242,7 +1242,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         // IDOR Protection: Verify user is admin/staff
         $user = request()->user();
         $role = str_replace('_', ' ', strtolower(trim((string) ($user?->role ?? ''))));
-        if (! $user || ! in_array($role, ['super admin', 'admin', 'staff', 'soc analyst'], true)) {
+        if (! $user || ! in_array($role, ['super admin', 'admin', 'staff'], true)) {
             abort(403, 'Unauthorized to update this project.');
         }
 
@@ -1266,7 +1266,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         // IDOR Protection: Verify user is admin/staff
         $user = request()->user();
         $role = str_replace('_', ' ', strtolower(trim((string) ($user?->role ?? ''))));
-        if (! $user || ! in_array($role, ['super admin', 'admin', 'staff', 'soc analyst'], true)) {
+        if (! $user || ! in_array($role, ['super admin', 'admin', 'staff'], true)) {
             abort(403, 'Unauthorized to delete this project.');
         }
 
@@ -1322,7 +1322,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             'alerts' => $project->alerts()->count(),
             'incidents' => $project->incidents()->count(),
         ]);
-    });
+    })->name('projects.realtime');
 
     Route::get('/test-scan/{project}', [ProjectSecurityController::class, 'runVulnerabilityScan'])->middleware('auth');
 

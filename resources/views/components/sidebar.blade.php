@@ -47,7 +47,7 @@ $items = [
     ['label' => 'Users & Roles', 'route' => 'users.roles', 'icon' => 'user', 'badge' => null],
 ];
 
-$socAnalystRoutes = ['dashboard', 'incidents.index', 'alerts.index', 'cloudflare.index', 'audit-logs.index', 'reports.index'];
+$socAnalystRoutes = ['dashboard', 'clients.index', 'projects.index', 'incidents.index', 'alerts.index', 'cloudflare.index', 'audit-logs.index', 'reports.index'];
 $clientDashboardUrl = route('client.dashboard');
 $clientItems = [
     ['label' => 'Dashboard', 'route' => 'client.dashboard', 'icon' => 'grid', 'badge' => null],

@@ -47,6 +47,7 @@
         $vulnerabilityCount = \App\Models\SiteVulnerability::query()
             ->where('project_id', $project->id)
             ->count();
+        $canManageProjects = ! in_array(strtolower(trim((string) (Auth::user()?->role ?? ''))), ['soc analyst'], true);
     @endphp
 
     <div
@@ -62,21 +63,23 @@
             </div>
 
             <div class="flex flex-wrap gap-3">
-                <form method="POST" action="{{ route('projects.vulnerability.scan', $project) }}" @submit="beginScan()">
-                    @csrf
-                    <button
-                        type="submit"
-                        :disabled="scanRunning"
-                        class="relative inline-flex h-10 min-w-[112px] items-center justify-center overflow-hidden rounded-lg border border-amber-400/20 bg-amber-400/10 px-4 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20 disabled:cursor-wait disabled:border-cyan-400/30 disabled:bg-cyan-400/10 disabled:text-cyan-200"
-                    >
-                        <span x-show="scanRunning" x-cloak class="scan-sweep pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent"></span>
-                        <span x-show="!scanRunning">Run Scan</span>
-                        <span x-show="scanRunning" x-cloak class="inline-flex items-center gap-2">
-                            <span class="scan-dot h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.95)]"></span>
-                            Scanning
-                        </span>
-                    </button>
-                </form>
+                @if ($canManageProjects)
+                    <form method="POST" action="{{ route('projects.vulnerability.scan', $project) }}" @submit="beginScan()">
+                        @csrf
+                        <button
+                            type="submit"
+                            :disabled="scanRunning"
+                            class="relative inline-flex h-10 min-w-[112px] items-center justify-center overflow-hidden rounded-lg border border-amber-400/20 bg-amber-400/10 px-4 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20 disabled:cursor-wait disabled:border-cyan-400/30 disabled:bg-cyan-400/10 disabled:text-cyan-200"
+                        >
+                            <span x-show="scanRunning" x-cloak class="scan-sweep pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent"></span>
+                            <span x-show="!scanRunning">Run Scan</span>
+                            <span x-show="scanRunning" x-cloak class="inline-flex items-center gap-2">
+                                <span class="scan-dot h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.95)]"></span>
+                                Scanning
+                            </span>
+                        </button>
+                    </form>
+                @endif
                 <a href="{{ route('projects.index') }}"
                    class="inline-flex h-10 items-center rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300">
                     Back
@@ -202,9 +205,11 @@
                     <span class="inline-flex h-9 items-center rounded-md border px-2.5 text-xs font-bold {{ $connected ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300' : 'border-red-400/20 bg-red-400/10 text-red-300' }}">
                         Connected: {{ $connected ? 'Yes' : 'No' }}
                     </span>
-                    <button type="button" class="h-9 rounded-lg border border-cyan-400/20 px-3 text-xs font-bold text-cyan-300 hover:bg-cyan-400/10">
-                        Regenerate key
-                    </button>
+                    @if ($canManageProjects)
+                        <button type="button" class="h-9 rounded-lg border border-cyan-400/20 px-3 text-xs font-bold text-cyan-300 hover:bg-cyan-400/10">
+                            Regenerate key
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -289,12 +294,14 @@
         <section class="rounded-xl border border-slate-800 bg-[#07111f] px-5 py-4">
             <p class="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Actions</p>
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('projects.edit', $project) }}" class="inline-flex h-10 items-center rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400/30 hover:text-cyan-300">Edit Project</a>
-                <form method="POST" action="{{ route('projects.destroy', $project) }}" onsubmit="return confirm('Delete this project? This action cannot be undone.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="h-10 rounded-lg border border-red-400/20 px-4 text-xs font-bold text-red-300 hover:bg-red-400/10">Delete Project</button>
-                </form>
+                @if ($canManageProjects)
+                    <a href="{{ route('projects.edit', $project) }}" class="inline-flex h-10 items-center rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400/30 hover:text-cyan-300">Edit Project</a>
+                    <form method="POST" action="{{ route('projects.destroy', $project) }}" onsubmit="return confirm('Delete this project? This action cannot be undone.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="h-10 rounded-lg border border-red-400/20 px-4 text-xs font-bold text-red-300 hover:bg-red-400/10">Delete Project</button>
+                    </form>
+                @endif
                 <button type="button" class="h-10 rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400/30 hover:text-cyan-300">View Logs</button>
                 <a href="{{ route('projects.index') }}" class="inline-flex h-10 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">Back</a>
             </div>

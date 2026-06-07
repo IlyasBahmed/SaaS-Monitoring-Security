@@ -18,6 +18,11 @@ class EnsureDashboardAccess
     private array $socAnalystRoutes = [
         'dashboard',
         'settings.index',
+        'clients.index',
+        'clients.show',
+        'projects.index',
+        'projects.show',
+        'projects.realtime',
         'incidents.*',
         'alerts.*',
         'cloudflare.*',

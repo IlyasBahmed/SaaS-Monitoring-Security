@@ -43,6 +43,7 @@
         $statusClass = $clientStatus === 'active'
             ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
             : 'border-amber-400/20 bg-amber-400/10 text-amber-300';
+        $canManageClients = ! in_array(strtolower(trim((string) (Auth::user()?->role ?? ''))), ['soc analyst'], true);
     @endphp
 
     <div class="space-y-6">
@@ -115,9 +116,11 @@
                     <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Projects Table</p>
                     <h2 class="mt-1 text-lg font-black text-white">Protected assets</h2>
                 </div>
-                <a href="{{ route('projects.create', ['client_id' => $client->id]) }}" class="inline-flex h-9 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">
-                    Add Project
-                </a>
+                @if ($canManageClients)
+                    <a href="{{ route('projects.create', ['client_id' => $client->id]) }}" class="inline-flex h-9 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">
+                        Add Project
+                    </a>
+                @endif
             </div>
 
             <div class="overflow-x-auto">
@@ -202,13 +205,16 @@
         <section class="rounded-xl border border-slate-800 bg-[#07111f] p-5">
             <p class="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Actions</p>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('projects.create', ['client_id' => $client->id]) }}" class="inline-flex h-10 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">Add Project</a>
-                <a href="{{ route('clients.edit', $client) }}" class="inline-flex h-10 items-center rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400/30 hover:text-cyan-300">Edit Client</a>
-                <form method="POST" action="{{ route('clients.destroy', $client) }}" onsubmit="return confirm('Delete this client? All client projects will also be deleted.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="h-10 rounded-lg border border-red-400/20 px-4 text-xs font-bold text-red-300 hover:bg-red-400/10">Delete Client</button>
-                </form>
+                @if ($canManageClients)
+                    <a href="{{ route('projects.create', ['client_id' => $client->id]) }}" class="inline-flex h-10 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">Add Project</a>
+                    <a href="{{ route('clients.edit', $client) }}" class="inline-flex h-10 items-center rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400/30 hover:text-cyan-300">Edit Client</a>
+                    <form method="POST" action="{{ route('clients.destroy', $client) }}" onsubmit="return confirm('Delete this client? All client projects will also be deleted.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="h-10 rounded-lg border border-red-400/20 px-4 text-xs font-bold text-red-300 hover:bg-red-400/10">Delete Client</button>
+                    </form>
+                @endif
+                <a href="{{ route('clients.index') }}" class="inline-flex h-10 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">Back</a>
             </div>
         </section>
     </div>

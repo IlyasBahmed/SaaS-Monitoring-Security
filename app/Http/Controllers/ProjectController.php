@@ -11,6 +11,9 @@ class ProjectController extends Controller
 {
     public function store(Request $request, CloudflareService $cloudflare)
 {
+    $role = str_replace('_', ' ', strtolower(trim((string) ($request->user()?->role ?? ''))));
+    abort_if($role === 'soc analyst', 403, 'SOC analysts can view projects, but cannot create them.');
+
     $data = $request->validate([
         'client_id' => 'required|exists:clients,id',
         'name' => 'required|string|max:255',

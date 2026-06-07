@@ -10,6 +10,7 @@
     $clientPaginationCurrent = method_exists($clients, 'currentPage') ? $clients->currentPage() : 1;
     $clientPaginationStart = max(1, $clientPaginationCurrent - 1);
     $clientPaginationEnd = min($clientPaginationPages, $clientPaginationCurrent + 1);
+    $canManageClients = ! in_array(strtolower(trim((string) (Auth::user()?->role ?? ''))), ['soc analyst'], true);
 
     if ($clientPaginationCurrent <= 2) {
         $clientPaginationEnd = min($clientPaginationPages, 3);
@@ -79,14 +80,16 @@
         </div>
 
         <div class="flex gap-2">
-            <a href="{{ route('clients.export') }}" class="inline-flex h-9 items-center rounded-lg border border-slate-800 bg-[#07111f] px-4 text-xs font-bold text-slate-400 hover:border-cyan-400/30 hover:text-cyan-300 transition">
-                Export
-            </a>
+            @if ($canManageClients)
+                <a href="{{ route('clients.export') }}" class="inline-flex h-9 items-center rounded-lg border border-slate-800 bg-[#07111f] px-4 text-xs font-bold text-slate-400 hover:border-cyan-400/30 hover:text-cyan-300 transition">
+                    Export
+                </a>
 
-            <a href="{{ route('clients.create') }}"
-                class="inline-flex h-9 items-center rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20 transition">
-                + Add Client
-            </a>
+                <a href="{{ route('clients.create') }}"
+                    class="inline-flex h-9 items-center rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20 transition">
+                    + Add Client
+                </a>
+            @endif
         </div>
     </div>
 
@@ -233,7 +236,7 @@
                                     View
                                 </a>
 
-                                @if($client->user)
+                                @if($canManageClients && $client->user)
                                     <form method="POST" action="{{ route('clients.send-password-setup', $client) }}">
                                         @csrf
                                         <button
@@ -247,7 +250,7 @@
                                             </svg>
                                         </button>
                                     </form>
-                                @else
+                                @elseif($canManageClients)
                                     <button
                                         type="button"
                                         disabled
