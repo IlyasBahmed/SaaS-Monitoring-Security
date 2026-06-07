@@ -657,7 +657,6 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
             })
             ->sortByDesc('created_timestamp')
             ->values();
-
         $openRows = $incidentRows->reject(fn ($incident) => in_array($incident['status'], ['resolved', 'closed'], true));
         $latestIncident = $incidentRows->first();
       
