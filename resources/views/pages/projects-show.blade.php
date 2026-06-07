@@ -50,6 +50,16 @@
         $currentRole = strtolower(trim((string) (Auth::user()?->role ?? '')));
         $canManageProjects = ! in_array($currentRole, ['soc analyst'], true);
         $canScanProjects = in_array($currentRole, ['super admin', 'admin', 'staff', 'soc analyst'], true);
+        $projectLogs = collect($projectLogs ?? []);
+        $logSeverityClass = static function (string $severity): string {
+            return [
+                'critical' => 'border-red-400/20 bg-red-400/10 text-red-300',
+                'high' => 'border-orange-400/20 bg-orange-400/10 text-orange-300',
+                'medium' => 'border-amber-400/20 bg-amber-400/10 text-amber-300',
+                'low' => 'border-cyan-400/20 bg-cyan-400/10 text-cyan-300',
+                'info' => 'border-blue-400/20 bg-blue-400/10 text-blue-300',
+            ][$severity] ?? 'border-slate-700 bg-slate-900 text-slate-300';
+        };
     @endphp
 
     <div
@@ -304,10 +314,68 @@
                         <button type="submit" class="h-10 rounded-lg border border-red-400/20 px-4 text-xs font-bold text-red-300 hover:bg-red-400/10">Delete Project</button>
                     </form>
                 @endif
-                <a href="{{ route('projects.logs', $project) }}" class="inline-flex h-10 items-center rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400/30 hover:text-cyan-300">View Logs</a>
+                <button type="button" @click="logsOpen = true" class="h-10 rounded-lg border border-slate-700 px-4 text-xs font-bold text-slate-300 hover:border-cyan-400/30 hover:text-cyan-300">View Logs</button>
                 <a href="{{ route('projects.index') }}" class="inline-flex h-10 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">Back</a>
             </div>
         </section>
+
+        <div
+            x-show="logsOpen"
+            x-cloak
+            x-transition.opacity
+            @keydown.escape.window="logsOpen = false"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+        >
+            <div class="max-h-[88vh] w-full max-w-5xl overflow-hidden rounded-xl border border-cyan-400/20 bg-[#07111f] shadow-2xl shadow-black/40">
+                <div class="flex items-center justify-between gap-4 border-b border-cyan-400/10 px-5 py-4">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-400">Project Logs</p>
+                        <h2 class="mt-1 text-lg font-black text-white">{{ $project->domain ?: $project->name }}</h2>
+                    </div>
+                    <button
+                        type="button"
+                        @click="logsOpen = false"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 text-slate-400 transition hover:border-cyan-400/30 hover:text-cyan-300"
+                        aria-label="Close logs"
+                    >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
+                            <path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="max-h-[70vh] overflow-y-auto">
+                    @forelse ($projectLogs as $log)
+                        <div class="grid gap-3 border-b border-slate-800 px-5 py-4 lg:grid-cols-[1fr_120px_120px_160px] lg:items-center">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-black text-white">{{ $log['event_label'] }}</p>
+                                <p class="mt-1 text-xs font-semibold text-slate-500">{{ $log['category_label'] }} / {{ $log['target'] }}</p>
+                                <p class="mt-1 text-[11px] font-semibold text-slate-600">{{ $log['actor'] }} / {{ $log['ip'] }}</p>
+                            </div>
+                            <span class="w-fit rounded-md border border-cyan-400/20 bg-cyan-400/10 px-2 py-1 text-[10px] font-black uppercase text-cyan-300">
+                                {{ $log['source'] }}
+                            </span>
+                            <span class="w-fit rounded-md border px-2 py-1 text-[10px] font-black uppercase {{ $logSeverityClass($log['severity']) }}">
+                                {{ $log['severity'] }}
+                            </span>
+                            <p class="text-xs font-semibold text-slate-500 lg:text-right">{{ $log['created_human'] }}</p>
+                        </div>
+                    @empty
+                        <div class="px-5 py-12 text-center text-sm font-semibold text-slate-500">
+                            No logs are linked to this project yet.
+                        </div>
+                    @endforelse
+                </div>
+
+                <div class="flex justify-end border-t border-cyan-400/10 px-5 py-4">
+                    <a href="{{ route('projects.logs', $project) }}" class="inline-flex h-9 items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-4 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20">
+                        Open Full Logs
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -317,6 +385,7 @@
                 lastSeen: '',
                 agentOnline: false,
                 scanRunning: false,
+                logsOpen: false,
 
                 beginScan() {
                     this.scanRunning = true;

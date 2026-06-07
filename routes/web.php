@@ -1294,7 +1294,97 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
         $healthReports = collect(rescue(fn () => HealthReport::query()->where('project_id', $projectId)->latest('event_created_at')->get(), collect(), false));
         $projectScore = ProjectSecurityScore::forProject($project, $alerts, $incidents, $vulnerabilities, $healthReports);
 
-        return view('pages.projects-show', compact('project', 'projectScore'));
+        $parseDate = static function ($value): ?Carbon {
+            if (blank($value)) {
+                return null;
+            }
+
+            return rescue(fn () => Carbon::parse($value), null, false);
+        };
+
+        $labelFromPayload = null;
+        $labelFromPayload = function ($value, string $fallback = '-') use (&$labelFromPayload) {
+            if (is_array($value)) {
+                $label = $value['name']
+                    ?? $value['email']
+                    ?? $value['username']
+                    ?? $value['ip']
+                    ?? $value['url']
+                    ?? $value['path']
+                    ?? $value['file']
+                    ?? $value['id']
+                    ?? $fallback;
+
+                return is_scalar($label) ? (string) $label : $fallback;
+            }
+
+            if (is_string($value) && trim($value) !== '') {
+                $decoded = json_decode($value, true);
+
+                return is_array($decoded) ? $labelFromPayload($decoded, $fallback) : $value;
+            }
+
+            return is_scalar($value) ? (string) $value : $fallback;
+        };
+
+        $normalizeSeverity = static function ($value): string {
+            $severity = strtolower(trim((string) $value));
+
+            return match ($severity) {
+                'critical', 'high', 'medium', 'low', 'info' => $severity,
+                'fatal', 'emergency', 'alert' => 'critical',
+                'error' => 'high',
+                'warn', 'warning' => 'medium',
+                default => 'info',
+            };
+        };
+
+        $mapLog = static function ($log, string $source) use ($labelFromPayload, $normalizeSeverity, $parseDate) {
+            $event = filled($log->event ?? null) ? (string) $log->event : 'project_log';
+            $category = strtolower((string) ($log->category ?? ($source === 'Agent' ? 'agent' : 'audit')));
+            $createdAt = $parseDate($log->event_created_at ?? null)
+                ?? $parseDate($log->created_at ?? null);
+
+            return [
+                'id' => (string) ($log->getKey() ?? md5($source.$event.($createdAt?->timestamp ?? now()->timestamp))),
+                'source' => $source,
+                'event_label' => ucwords(str_replace('_', ' ', $event)),
+                'category_label' => ucwords(str_replace('_', ' ', $category)),
+                'severity' => $normalizeSeverity($log->severity ?? null),
+                'ip' => $log->ip ?: '-',
+                'actor' => $labelFromPayload($log->actor ?? null, $source),
+                'target' => $labelFromPayload($log->target ?? null, '-'),
+                'created_timestamp' => $createdAt?->timestamp ?? 0,
+                'created_human' => $createdAt ? $createdAt->diffForHumans() : 'Recently',
+            ];
+        };
+
+        $projectLogs = collect(rescue(
+            fn () => AuditLog::query()
+                ->where('project_id', $projectId)
+                ->orderBy('event_created_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->take(30)
+                ->get(),
+            collect(),
+            false
+        ))
+            ->map(fn (AuditLog $log) => $mapLog($log, 'Audit'))
+            ->merge(collect(rescue(
+                fn () => AgentLog::query()
+                    ->where('project_id', $projectId)
+                    ->orderBy('event_created_at', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->take(30)
+                    ->get(),
+                collect(),
+                false
+            ))->map(fn (AgentLog $log) => $mapLog($log, 'Agent')))
+            ->sortByDesc('created_timestamp')
+            ->take(30)
+            ->values();
+
+        return view('pages.projects-show', compact('project', 'projectScore', 'projectLogs'));
     })->name('projects.show');
 
     Route::get('/projects/{project}/realtime', function (Projects $project) {
