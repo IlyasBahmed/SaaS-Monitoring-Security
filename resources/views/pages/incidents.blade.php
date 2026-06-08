@@ -663,8 +663,8 @@
                     return this.rows.filter((row) => {
                         const matchesSearch = !q || String(row.search || '').toLowerCase().includes(q);
 
-                        const matchesStatus = this.status === 'all'
-                            || row.status === this.status
+                        const matchesStatus = (this.status === 'all' && !['resolved', 'closed'].includes(row.status))
+                            || (row.status === this.status)
                             || (this.status === 'resolved' && ['resolved', 'closed'].includes(row.status));
 
                         const matchesSeverity = this.severity === 'all'
