@@ -6,82 +6,165 @@ use Illuminate\Support\Collection;
 
 class ProjectSecurityScore
 {
-    public static function forProject($project, Collection $alerts, Collection $incidents, Collection $vulnerabilities, Collection $healthReports): array
-    {
-        $projectId = (int) ($project->id ?? 0);
-        $projectAlerts = self::forProjectId($alerts, $projectId);
-        $projectIncidents = self::forProjectId($incidents, $projectId);
-        $projectVulnerabilities = self::forProjectId($vulnerabilities, $projectId);
-        $healthScore = self::latestHealthScore(self::forProjectId($healthReports, $projectId));
+   public static function forProject(
+    $project,
+    Collection $alerts,
+    Collection $incidents,
+    Collection $vulnerabilities,
+    Collection $healthReports
+): array {
+    $projectId = (int) ($project->id ?? 0);
 
-        if ($healthScore !== null) {
-            $riskScore = 100 - $healthScore;
+    $projectAlerts = self::forProjectId($alerts, $projectId);
+    $projectIncidents = self::forProjectId($incidents, $projectId);
+    $projectVulnerabilities = self::forProjectId($vulnerabilities, $projectId);
 
-            return self::result($healthScore, $riskScore, 'health_report');
+    $healthScore = self::latestHealthScore(
+        self::forProjectId($healthReports, $projectId)
+    );
+
+    $open = fn ($item) => in_array(
+        strtolower((string) ($item->status ?? 'open')),
+        ['open', 'active', 'in_progress'],
+        true
+    );
+
+    $sev = fn ($item) => strtolower((string) ($item->severity ?? 'low'));
+
+    /*
+    |--------------------------------------------------------------------------
+    | Vulnerabilities (Max 40)
+    |--------------------------------------------------------------------------
+    */
+    $vulnerabilityPenalty = 0;
+
+    foreach ($projectVulnerabilities as $vuln) {
+        if (! $open($vuln)) {
+            continue;
         }
 
-        $riskScore = 0;
-
-        $open = fn ($item) => in_array(strtolower((string) ($item->status ?? 'open')), ['open', 'active', 'in_progress'], true);
-        $sev = fn ($item) => strtolower((string) ($item->severity ?? 'low'));
-
-        foreach ($projectVulnerabilities as $vuln) {
-            if (! $open($vuln)) continue;
-
-            $riskScore += match ($sev($vuln)) {
-                'critical' => 20,
-                'high' => 12,
-                'medium' => 6,
-                'low' => 2,
-                default => 4,
-            };
-        }
-
-        foreach ($projectIncidents as $incident) {
-            if (! $open($incident)) continue;
-
-            $riskScore += match ($sev($incident)) {
-                'critical' => 22,
-                'high' => 14,
-                'medium' => 7,
-                'low' => 3,
-                default => 6,
-            };
-        }
-
-        foreach ($projectAlerts as $alert) {
-            if ((bool) ($alert->resolved ?? false)) continue;
-
-            $riskScore += match ($sev($alert)) {
-                'critical' => 18,
-                'high' => 10,
-                'medium' => 5,
-                'low' => 2,
-                default => 3,
-            };
-        }
-
-        if (! ($project->is_connected ?? false)) {
-            $riskScore += 8;
-        }
-
-        if (! ($project->cloudflare_enabled ?? false)) {
-            $riskScore += 6;
-        }
-
-        if (empty($project->domain)) {
-            $riskScore += 4;
-        }
-
-        if ($project->last_seen_at && now()->diffInMinutes($project->last_seen_at) > 30) {
-            $riskScore += 8;
-        }
-
-        $riskScore = max(0, min(100, (int) round($riskScore)));
-        $score = max(0, 100 - $riskScore);
-
-        return self::result($score, $riskScore, 'live_findings');
+        $vulnerabilityPenalty += match ($sev($vuln)) {
+            'critical' => 8,
+            'high' => 5,
+            'medium' => 2,
+            'low' => 1,
+            default => 2,
+        };
     }
+
+    $vulnerabilityPenalty = min(40, $vulnerabilityPenalty);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Incidents (Max 35)
+    |--------------------------------------------------------------------------
+    */
+    $incidentPenalty = 0;
+
+    foreach ($projectIncidents as $incident) {
+        if (! $open($incident)) {
+            continue;
+        }
+
+        $incidentPenalty += match ($sev($incident)) {
+            'critical' => 10,
+            'high' => 6,
+            'medium' => 3,
+            'low' => 1,
+            default => 3,
+        };
+    }
+
+    $incidentPenalty = min(35, $incidentPenalty);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Alerts (Max 15)
+    |--------------------------------------------------------------------------
+    */
+    $alertPenalty = 0;
+
+    foreach ($projectAlerts as $alert) {
+        if ((bool) ($alert->resolved ?? false)) {
+            continue;
+        }
+
+        $alertPenalty += match ($sev($alert)) {
+            'critical' => 4,
+            'high' => 3,
+            'medium' => 2,
+            'low' => 1,
+            default => 1,
+        };
+    }
+
+    $alertPenalty = min(15, $alertPenalty);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Project Health (Max 10)
+    |--------------------------------------------------------------------------
+    */
+    $healthPenalty = 0;
+
+    if (! ($project->is_connected ?? false)) {
+        $healthPenalty += 4;
+    }
+
+    if (! ($project->cloudflare_enabled ?? false)) {
+        $healthPenalty += 3;
+    }
+
+    if (empty($project->domain)) {
+        $healthPenalty += 1;
+    }
+
+    if (
+        $project->last_seen_at &&
+        now()->diffInHours($project->last_seen_at) > 1
+    ) {
+        $healthPenalty += 2;
+    }
+
+    $healthPenalty = min(10, $healthPenalty);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Live Score
+    |--------------------------------------------------------------------------
+    */
+    $totalPenalty =
+        $vulnerabilityPenalty +
+        $incidentPenalty +
+        $alertPenalty +
+        $healthPenalty;
+
+    $liveScore = max(0, 100 - $totalPenalty);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Final Score
+    |--------------------------------------------------------------------------
+    */
+    if ($healthScore !== null) {
+        $score = (int) round(
+            ($healthScore * 0.7) +
+            ($liveScore * 0.3)
+        );
+
+        return self::result(
+            $score,
+            100 - $score,
+            'health_report+live_findings'
+        );
+    }
+
+    return self::result(
+        $liveScore,
+        100 - $liveScore,
+        'live_findings'
+    );
+}
 
     private static function forProjectId(Collection $rows, int $projectId): Collection
     {
