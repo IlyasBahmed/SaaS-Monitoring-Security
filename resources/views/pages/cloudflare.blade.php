@@ -585,7 +585,7 @@
                                 </div>
 
                                 <div class="flex flex-wrap gap-2">
-                                    <button
+                                    {{-- <button
                                         @click="syncCloudflare(selectedSite)"
                                         :disabled="!selectedSite.sync_url || syncingProjectId === selectedSite.project_id"
                                         class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-400/10 px-4 text-sm font-black text-cyan-200 transition-all duration-200 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50"
@@ -599,9 +599,9 @@
                                             <path d="M3 12A9 9 0 0 1 18.5 5.7L21 8"></path>
                                             <path d="M21 3v5h-5"></path>
                                         </svg>
-                                        <span x-text="syncingProjectId === selectedSite.project_id ? 'Syncing...' : 'Sync API'"></span>
-                                    </button>
-                                    <button
+                                        <span x-text="syncingProjectId === selectedSite.project_id ? 'Syncing...' : 'Sync API'"></span> 
+                                    </button> --}}
+                                    {{-- <button
                                         @click="openCloudflareConfig(selectedSite)"
                                         class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 px-4 text-sm font-black text-slate-950 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/25 hover:scale-[1.02]"
                                     >
@@ -610,7 +610,7 @@
                                             <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.38.3.8.3 1.2H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.8Z"></path>
                                         </svg>
                                         Configure API
-                                    </button>
+                                    </button> --}}
                                 </div>
                             </div>
 
