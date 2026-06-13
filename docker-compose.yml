@@ -11,7 +11,7 @@ services:
 
     restart: unless-stopped
 
-    working_dir: /var/www
+    working_dir: /var/www 
 
     volumes:
       - public_data:/var/www/public
@@ -113,25 +113,16 @@ services:
       - app-network
 
   queue:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: laravel_queue
-    working_dir: /var/www
-    command: php artisan queue:work --tries=3
-    volumes:
-      - .:/var/www
-    depends_on:
-      - postgres
-      - mongodb
-    networks:
-      - app-network
+   build:
+    context: .
+    dockerfile: Dockerfile
+   container_name: laravel_queue
+   working_dir: /var/www
+   command: php artisan queue:work --tries=3
 
-volumes:
-  public_data:
-  postgres_data:
-  mongodb_data:
+   depends_on:
+    - postgres
+    - mongodb
 
-networks:
-  app-network:
-    driver: bridge
+   networks:
+    - app-network
