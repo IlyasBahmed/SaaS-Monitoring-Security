@@ -45,7 +45,7 @@ services:
       DB_PASSWORD: secret
       CACHE_DRIVER: file
       SESSION_DRIVER: file
-      QUEUE_CONNECTION: database
+      QUEUE_CONNECTION: sync
       MONGODB_URI: mongodb://mongodb:27017/saas
       SESSION_HTTP_ONLY: "true"
       SESSION_SAME_SITE: lax
