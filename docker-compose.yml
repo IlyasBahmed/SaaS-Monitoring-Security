@@ -45,7 +45,7 @@ services:
       DB_PASSWORD: secret
       CACHE_DRIVER: file
       SESSION_DRIVER: file
-      QUEUE_CONNECTION: sync
+      QUEUE_CONNECTION: database
       MONGODB_URI: mongodb://mongodb:27017/saas
       SESSION_HTTP_ONLY: "true"
       SESSION_SAME_SITE: lax
@@ -112,20 +112,20 @@ services:
     networks:
       - app-network
 
-  # queue:
-  #  build:
-  #   context: .
-  #   dockerfile: Dockerfile
-  #   container_name: laravel_queue
-  #   working_dir: /var/www
-  #   command: php artisan queue:work --tries=3
+  queue:
+   build:
+    context: .
+    dockerfile: Dockerfile
+    container_name: laravel_queue
+    working_dir: /var/www
+    command: php artisan queue:work --tries=3
 
-  #   depends_on:
-  #   - postgres
-  #   - mongodb
+    depends_on:
+    - postgres
+    - mongodb
 
-  #   networks:
-  #   - app-network
+    networks:
+    - app-network
 
 volumes:
   public_data:
