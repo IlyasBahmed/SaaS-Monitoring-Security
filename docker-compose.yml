@@ -116,13 +116,22 @@ services:
    build:
     context: .
     dockerfile: Dockerfile
-   container_name: laravel_queue
-   working_dir: /var/www
-   command: php artisan queue:work --tries=3
+    container_name: laravel_queue
+    working_dir: /var/www
+    command: php artisan queue:work --tries=3
 
-   depends_on:
+    depends_on:
     - postgres
     - mongodb
 
-   networks:
+    networks:
     - app-network
+
+volumes:
+  public_data:
+  postgres_data:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge
