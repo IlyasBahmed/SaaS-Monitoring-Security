@@ -113,9 +113,9 @@ services:
       - app-network
 
   queue:
-   build:
-    context: .
-    dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
 
     container_name: laravel_queue
 
@@ -124,27 +124,27 @@ services:
     command: php artisan queue:work --tries=3
 
     environment:
-     APP_ENV: production
-     APP_DEBUG: "false"
-     APP_KEY: ${APP_KEY}
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
 
-     DB_CONNECTION: pgsql
-     DB_HOST: postgres
-     DB_PORT: 5432
-     DB_DATABASE: laravel
-     DB_USERNAME: laravel
-     DB_PASSWORD: secret
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
 
-     QUEUE_CONNECTION: database
+      QUEUE_CONNECTION: database
 
-     MONGODB_URI: mongodb://mongodb:27017/saas
+      MONGODB_URI: mongodb://mongodb:27017/saas
 
-   depends_on:
-    - postgres
-    - mongodb
+    depends_on:
+      - postgres
+      - mongodb
 
-   networks:
-    - app-network
+    networks:
+      - app-network
 
 volumes:
   public_data:
