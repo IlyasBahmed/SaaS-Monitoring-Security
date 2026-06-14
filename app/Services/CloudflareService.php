@@ -32,19 +32,19 @@ class CloudflareService
 }
 
     protected function handle($response): array
-    {
-        $json = $response->json();
+{
+    $json = $response->json();
 
-        if (!$response->successful() || !($json['success'] ?? false)) {
-            $message = $json['errors'][0]['message']
-                ?? $json['messages'][0]['message']
-                ?? 'Cloudflare API request failed.';
+    if (!$response->successful() || !($json['success'] ?? false)) {
 
-            throw new RuntimeException($message);
-        }
-
-        return $json['result'] ?? $json;
+        throw new RuntimeException(json_encode([
+            'status' => $response->status(),
+            'body' => $json,
+        ], JSON_PRETTY_PRINT));
     }
+
+    return $json['result'] ?? $json;
+}
 
     protected function handleGraphql($response): array
     {
