@@ -114,11 +114,30 @@ services:
 
   queue:
    build:
-     context: .
-     dockerfile: Dockerfile
-   container_name: laravel_queue
-   working_dir: /var/www
-   command: php artisan queue:work --tries=3
+    context: .
+    dockerfile: Dockerfile
+
+    container_name: laravel_queue
+
+    working_dir: /var/www
+
+    command: php artisan queue:work --tries=3
+
+    environment:
+     APP_ENV: production
+     APP_DEBUG: "false"
+     APP_KEY: ${APP_KEY}
+
+     DB_CONNECTION: pgsql
+     DB_HOST: postgres
+     DB_PORT: 5432
+     DB_DATABASE: laravel
+     DB_USERNAME: laravel
+     DB_PASSWORD: secret
+
+     QUEUE_CONNECTION: database
+
+     MONGODB_URI: mongodb://mongodb:27017/saas
 
    depends_on:
     - postgres
