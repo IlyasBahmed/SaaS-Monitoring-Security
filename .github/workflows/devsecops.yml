@@ -175,7 +175,7 @@ jobs:
           username: azureuser
           key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-          script: |
+          script: | 
            cd /opt/project
 
            git fetch origin
