@@ -121,7 +121,9 @@ services:
 
     working_dir: /var/www
 
-    command: php artisan queue:work --tries=3
+    command: php artisan queue:work database --sleep=3 --tries=3 --timeout=90
+
+    restart: unless-stopped
 
     environment:
       APP_ENV: production
@@ -136,8 +138,10 @@ services:
       DB_PASSWORD: secret
 
       QUEUE_CONNECTION: database
-
       MONGODB_URI: mongodb://mongodb:27017/saas
+
+    volumes:
+      - .:/var/www   # 🔥 مهم جداً
 
     depends_on:
       - postgres
