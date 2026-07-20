@@ -8,27 +8,8 @@
         $activeProjects = $allProjects->filter(fn ($project) => strtolower($project->status ?? '') === 'active')->count();
         $offlineProjects = $allProjects->filter(fn ($project) => strtolower($project->status ?? 'offline') !== 'active')->count();
 
-        $scoreForProject = function ($project) {
-            $status = strtolower($project->status ?? 'offline');
-            $stack = strtolower($project->stack ?? '');
-            $lastSeenAt = $project->agent_last_seen_at
-                ? \Illuminate\Support\Carbon::parse($project->agent_last_seen_at)
-                : null;
-            $agentOnline = $lastSeenAt && $lastSeenAt->gt(now()->subMinutes(30));
-
-            $score = 45;
-            $score += $status === 'active' ? 20 : 0;
-            $score += $agentOnline ? 15 : 0;
-            $score += $project->domain ? 10 : 0;
-            $score += str_contains($stack, 'cloudflare') ? 10 : 0;
-            $score -= $status === 'warning' ? 8 : 0;
-            $score -= ! in_array($status, ['active', 'warning'], true) ? 7 : 0;
-
-            return max(25, min(99, $score));
-        };
-
         $averageScore = $allProjects->isNotEmpty()
-            ? (int) round($allProjects->avg(fn ($project) => $scoreForProject($project)))
+            ? (int) round($allProjects->avg(fn ($project) => (int) ($project->security_score ?? 0)))
             : 0;
         $totalAlerts = $allProjects->sum(fn ($project) => $project->alerts_count ?? 0);
         $totalIncidents = $allProjects->sum(fn ($project) => $project->incidents_count ?? 0);
@@ -140,7 +121,7 @@
                         @forelse($projects as $project)
                             @php
                                 $projectStatus = strtolower($project->status ?? 'offline');
-                                $projectScore = $scoreForProject($project);
+                                $projectScore = (int) ($project->security_score ?? 0);
                                 $projectScoreClass = $projectScore >= 85 ? 'text-emerald-300' : ($projectScore >= 65 ? 'text-amber-300' : 'text-red-300');
                                 $lastSeen = $project->agent_last_seen_at
                                     ? \Illuminate\Support\Carbon::parse($project->agent_last_seen_at)

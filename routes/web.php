@@ -1852,15 +1852,52 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     Route::get('/clients/{client}', function (clients $client) {
 
     $clientProjects = $client->projects()
+        ->with('agents')
         ->latest()
         ->get();
+
+    $projectIds = $clientProjects->pluck('id')->map(fn ($id) => (int) $id)->values();
+    $scoreAlerts = collect(rescue(
+        fn () => Alert::query()->whereIn('project_id', $projectIds->all())->get(),
+        collect(),
+        false
+    ));
+    $scoreIncidents = collect(rescue(
+        fn () => Incident::query()->whereIn('project_id', $projectIds->all())->get(),
+        collect(),
+        false
+    ));
+    $scoreVulnerabilities = collect(rescue(
+        fn () => SiteVulnerability::query()->whereIn('project_id', $projectIds->all())->get(),
+        collect(),
+        false
+    ));
+    $scoreHealthReports = collect(rescue(
+        fn () => HealthReport::query()->whereIn('project_id', $projectIds->all())->latest('event_created_at')->get(),
+        collect(),
+        false
+    ));
+
+    $attachScore = function (Projects $project) use ($scoreAlerts, $scoreIncidents, $scoreVulnerabilities, $scoreHealthReports) {
+        $score = ProjectSecurityScore::forProject($project, $scoreAlerts, $scoreIncidents, $scoreVulnerabilities, $scoreHealthReports);
+
+        $project->security_score = $score['security_score'];
+        $project->security_score_label = $score['score_label'];
+        $project->security_score_source = $score['source'];
+        $project->risk_score = $score['risk_score'];
+        $project->risk_label = $score['risk_label'];
+
+        return $project;
+    };
 
     foreach ($clientProjects as $project) {
         $project->alerts_count = $project->alerts()->count();
         $project->incidents_count = $project->incidents()->count();
+        $attachScore($project);
     }
 
     $projects = $client->projects()
+        ->with('agents')
         ->latest()
         ->paginate(10, ['*'], 'projects_page')
         ->withQueryString();
@@ -1868,6 +1905,7 @@ Route::middleware(['auth', 'verified', 'dashboard.access'])->group(function () {
     foreach ($projects as $project) {
         $project->alerts_count = $project->alerts()->count();
         $project->incidents_count = $project->incidents()->count();
+        $attachScore($project);
     }
 
     return view('pages.clients-show', compact('client', 'clientProjects', 'projects'));
