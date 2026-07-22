@@ -8,13 +8,13 @@ use App\Http\Controllers\AutoScanController;
 use App\Http\Controllers\CloudflareActionController;
 use App\Http\Controllers\CloudflareProjectController;
 
-Route::post('/cloudflare/actions', [CloudflareActionController::class, 'store']);
-Route::get('/projects/{project}/cloudflare/analytics', [CloudflareProjectController::class, 'analytics'])
-    ->name('projects.cloudflare.analytics');
-Route::get('/cloudflare/analytics/{project}', [
-    CloudflareProjectController::class,
-    'analytics'
-]);
+// Route::post('/cloudflare/actions', [CloudflareActionController::class, 'store']);
+// Route::get('/projects/{project}/cloudflare/analytics', [CloudflareProjectController::class, 'analytics'])
+//     ->name('projects.cloudflare.analytics');
+// Route::get('/cloudflare/analytics/{project}', [
+//     CloudflareProjectController::class,
+//     'analytics'
+// ]);
 
 Route::post('/agent/verify', [AgentController::class, 'verify']);
 Route::post('/agent/connect', [AgentConnectionController::class, 'connect']);
