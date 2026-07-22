@@ -31,10 +31,9 @@ COPY . .
 # Install PHP dependencies
 RUN composer install \
     --no-dev \
-    --prefer-dist \
-    --no-interaction \
     --optimize-autoloader \
-    --classmap-authoritative
+    --no-interaction \
+    --prefer-dist
 
 # =========================
 # Stage 2 — Frontend Build
@@ -80,7 +79,7 @@ RUN echo "expose_php = Off" > /usr/local/etc/php/conf.d/security.ini
 WORKDIR /var/www
 
 # Copy project
-COPY --chown=www-data:www-data . .
+COPY . .
 
 # Copy vendor from composer stage
 COPY --from=composer /app/vendor ./vendor
@@ -98,15 +97,12 @@ RUN mkdir -p \
     storage/framework/views \
     storage/logs \
     bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
+    && chown -R www-data:www-data /var/www \
     && chmod -R 775 storage bootstrap/cache
 
 # Optimize Laravel
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+RUN php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear
 
-USER www-data    
 EXPOSE 9000
-
-CMD ["php-fpm"]
