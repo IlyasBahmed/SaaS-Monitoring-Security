@@ -3,7 +3,9 @@ version: '3.8'
 services:
 
   app:
-    image: ghcr.io/ilyasbahmed/saas-monitoring-security/laravel-app:latest
+    build:
+    context: .
+    dockerfile: Dockerfile
 
     container_name: laravel_app
 

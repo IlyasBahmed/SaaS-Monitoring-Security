@@ -125,38 +125,20 @@ jobs:
     needs: security
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build Docker Image
-        run: |
-          docker build \
-            -t ghcr.io/ilyasbahmed/saas-monitoring-security/laravel-app \
-            .
+        run: docker build -t laravel-app .
 
-      - name: Scan Docker Image with Trivy
+      - name: Scan Docker Image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/ilyasbahmed/saas-monitoring-security/laravel-app
+          image-ref: laravel-app
           format: table
           exit-code: '1'
           severity: CRITICAL,HIGH
-
-      - name: Push Docker Image
-        run: |
-          docker push ghcr.io/ilyasbahmed/saas-monitoring-security/laravel-app
 
   dast:
     needs: container-security
@@ -186,15 +168,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to Azure VM
+      - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
           username: azureuser
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /opt/project
 
-            docker compose pull
+          script: | 
+           cd /opt/project
 
-            docker compose up -d --remove-orphans
+           git fetch origin
+           git reset --hard origin/main
+
+           docker-compose down
+           docker-compose up -d --build
