@@ -3,9 +3,8 @@ version: '3.8'
 services:
 
   app:
-    build:
-    context: .
-    dockerfile: Dockerfile
+
+    image: ilyase25/laravel-app:latest
 
     container_name: laravel_app
 
@@ -113,7 +112,7 @@ services:
       - app-network
 
   queue:
-    image: ghcr.io/ilyasbahmed/saas-monitoring-security/laravel-app:latest
+    image: ilyase25/laravel-app:latest
 
     container_name: laravel_queue
 
