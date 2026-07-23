@@ -137,12 +137,12 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t YOUR_DOCKER_USERNAME/laravel-app:latest .
+          docker build -t DOCKER_USERNAME/laravel-app:latest .
 
       - name: Scan Docker Image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: YOUR_DOCKER_USERNAME/laravel-app:latest
+          image-ref: DOCKER_PASSWORD/laravel-app:latest
           format: table
           exit-code: '1'
           severity: CRITICAL,HIGH
